@@ -19,17 +19,280 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile Profile?
+  profile                Profile?
+  posts                  Post[]
+  votes                  Vote[]
+  comments               Comment[]
+  commentVotes           CommentVote[]
+  events                 Event[]
+  eventInterests         EventInterest[]
+  eventComments          EventComment[]
+  following              Follow[]        @relation("Follower")
+  followers              Follow[]        @relation("Following")
+  notificationsReceived  Notification[]  @relation("NotificationRecipient")
+  notificationsTriggered Notification[]  @relation("NotificationActor")
+  requestSent            FollowRequest[] @relation("RequestSent")
+  requestReceived        FollowRequest[] @relation("RequestReceived")
 }
 
 model Profile {
   id        String  @id @default(cuid())
   userId    String  @unique
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   bio       String?
   avatar    String?
   latitude  Float?
   longitude Float?
   city      String?
   country   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Follow {
+  followerId  String
+  followingId String
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+}
+
+model Post {
+  id        String        @id @default(cuid())
+  caption   String?
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placeName String?
+  category  PostCategory?
+  latitude  Float?
+  address   String?
+  longitude Float?
+  votes     Vote[]
+  comments  Comment[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  images        Image[]
+  videos        Video[]
+  notifications Notification[]
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([category])
+}
+
+enum PostCategory {
+  General
+  Nature
+  Food
+  Traffic
+  Alert
+  LostFound
+}
+
+model Event {
+  id String @id @default(cuid())
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String
+
+  latitude  Float
+  longitude Float
+  placeName String?
+  address   String?
+
+  startTime DateTime
+  endTime   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visibility Visibility @default(Public)
+
+  interests     EventInterest[]
+  images        Image[]
+  videos        Video[]
+  eventComments EventComment[]
+  notifications Notification[]
+
+  @@index([createdAt])
+  @@index([creatorId])
+}
+
+model FollowRequest {
+  senderId   String
+  receiverId String
+
+  sender   User @relation("RequestSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("RequestReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([senderId, receiverId])
+  @@index([receiverId])
+}
+
+enum Visibility {
+  Public
+  Friends
+}
+
+model EventComment {
+  id       String         @id @default(cuid())
+  parentId String?
+  parent   EventComment?  @relation("EventCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  EventComment[] @relation("EventCommentReplies")
+
+  text      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+}
+
+model EventInterest {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model Image {
+  id  String @id @default(cuid())
+  url String
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Video {
+  id  String @id @default(cuid())
+  url String
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+
+  actorId String?
+  actor   User?   @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  type NotificationType
+
+  isSeen Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isSeen])
+}
+
+enum NotificationType {
+  Follow
+  FollowRequest
+  FollowRequestAccepted
+
+  PostReaction
+  PostComment
+  CommentReply
+  CommentReaction
+
+  EventInterest
+  EventComment
+
+  Mention
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reaction  Reaction
+
+  @@unique([userId, postId])
+}
+
+enum Reaction {
+  Like
+  Love
+  Fire
+}
+
+model Comment {
+  id            String         @id @default(cuid())
+  parentId      String?
+  parent        Comment?       @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]      @relation("CommentReplies")
+  text          String
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId        String
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  commentVotes  CommentVote[]
+  notifications Notification[]
+
+  @@index([postId])
+}
+
+model CommentVote {
+  id String @id @default(cuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, commentId])
 }
