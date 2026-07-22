@@ -5,11 +5,11 @@ import { updateProfileSchema } from "../validators/profile.validator.js";
 export const profile = async (req: Request, res: Response) => {
 
     try {
-        const user = await userProfile(req.user);
+            const user = await userProfile(req.user);
 
         return res.status(200).json({
             success: true,
-            user: user
+            user
         })
     } catch (error) {
         return res.status(400).json({
