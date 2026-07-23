@@ -5,6 +5,7 @@ import QueryProvider from "@/providers/QueryProvider";
 import { Toaster } from "sonner";
 import LoginSuccessToast from "@/components/LoginSuccessToast";
 import AuthProvider from "@/providers/AuthProvider";
+import GoogleMapsProvider from "@/providers/GoogleMapsProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +34,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <AuthProvider>
-            {children}
-            <LoginSuccessToast />
-            <Toaster richColors position="top-right" />
-          </AuthProvider>
+          <GoogleMapsProvider>
+            <AuthProvider>
+              {children}
+              <LoginSuccessToast />
+              <Toaster richColors position="top-right" />
+            </AuthProvider>
+          </GoogleMapsProvider>
+
 
         </QueryProvider>
 

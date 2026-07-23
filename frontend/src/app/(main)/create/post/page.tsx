@@ -27,7 +27,7 @@ export default function CreatePostCard() {
     const [isMounted, setIsMounted] = useState(false);
     const [postText, setPostText] = useState("");
     const [activeCategory, setActiveCategory] = useState<Category>("General");
-    const [media, setMedia] = useState<MediaItem[]>();
+    const [media, setMedia] = useState<MediaItem[]>([]);
     const [locationQuery, setLocationQuery] = useState("");
     const [isPosting, setIsPosting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +38,7 @@ export default function CreatePostCard() {
     }, []);
 
     const removeMedia = (id: string) => {
+
         setMedia((prev) => prev.filter((item) => item.id !== id));
     };
 
@@ -144,8 +145,8 @@ export default function CreatePostCard() {
                                     key={category}
                                     onClick={() => setActiveCategory(category)}
                                     className={`px-md py-2 rounded-full transition-all font-label-md text-label-md flex items-center gap-xs ${isActive
-                                            ? "bg-primary text-white"
-                                            : "bg-surface-container hover:bg-surface-container-high"
+                                        ? "bg-primary text-white"
+                                        : "bg-surface-container hover:bg-surface-container-high"
                                         }`}
                                 >
                                     {category === "Alert" && <AlertTriangle className="w-[18px] h-[18px]" />}
@@ -162,22 +163,29 @@ export default function CreatePostCard() {
                         Media
                     </label>
                     <div className="grid grid-cols-3 gap-md">
-                        {media?.map((item) => (
-                            <div
-                                key={item.id}
-                                className="relative aspect-square rounded-2xl overflow-hidden group border border-outline-variant/20 shadow-sm"
-                            >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img className="w-full h-full object-cover" alt="Post media preview" src={item.src} />
-                                <button
-                                    aria-label="Remove media"
-                                    onClick={() => removeMedia(item.id)}
-                                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <X className="w-[18px] h-[18px]" />
-                                </button>
-                            </div>
-                        ))}
+                        {
+                            media?.length > 0 &&
+                            <>
+                                {media?.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="relative aspect-square rounded-2xl overflow-hidden group border border-outline-variant/20 shadow-sm"
+                                    >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img className="w-full h-full object-cover" alt="Post media preview" src={item.src} />
+                                        <button
+                                            aria-label="Remove media"
+                                            onClick={() => removeMedia(item.id)}
+                                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="w-[18px] h-[18px]" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </>
+
+                        }
+
 
                         {/* Upload Slot */}
                         <button
