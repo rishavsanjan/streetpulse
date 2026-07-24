@@ -65,9 +65,10 @@ export default function CurrentLocation({
       type="button"
       onClick={getCurrentLocation}
       disabled={loading}
-      className="w-full"
+      className="flex-1 flex items-center justify-center gap-sm bg-white border border-outline-variant/40 hover:border-primary py-3 rounded-xl font-label-md text-label-md transition-all active:scale-[0.98] shadow-sm"
     >
-      <LocateFixed className="mr-2 h-4 w-4" />
+      <LocateFixed className="w-5 h-5 text-primary" />
+
 
       {loading ? "Fetching location..." : "Use Current Location"}
     </button>

@@ -13,7 +13,7 @@ export default function GoogleMapsProvider({
   return (
     <APIProvider
       apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-      libraries={["places"]}
+      solutionChannel="street-pulse"
     >
       {children}
     </APIProvider>

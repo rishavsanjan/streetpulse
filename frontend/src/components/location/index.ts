@@ -1,4 +1,4 @@
-export { default as GoogleMapsProvider } from "./GoogleMapsProvider";
+export { default as GoogleMapsProvider } from "../../providers/GoogleMapsProvider";
 export { default as GoogleMap } from "./GoogleMap";
 export { default as SearchBox } from "./SearchBox";
 export { default as CurrentLocation } from "./CurrentLocation";

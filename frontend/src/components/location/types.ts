@@ -3,3 +3,8 @@ export interface SelectedLocation {
   latitude: number;
   longitude: number;
 }
+
+export interface PlaceSuggestion {
+  id: string;
+  text: string;
+}

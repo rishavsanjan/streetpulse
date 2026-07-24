@@ -11,6 +11,8 @@ import {
     Globe,
     Send,
 } from "lucide-react";
+import { CurrentLocation, LocationPicker, SelectedLocation } from "@/components/location";
+import SearchPlace from "@/components/location/SearchPlace";
 
 interface MediaItem {
     id: string;
@@ -31,6 +33,12 @@ export default function CreatePostCard() {
     const [locationQuery, setLocationQuery] = useState("");
     const [isPosting, setIsPosting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [location, setLocation] =
+        useState<SelectedLocation>({
+            address: "",
+            latitude: 28.6139,
+            longitude: 77.209,
+        });
 
     useEffect(() => {
         const timer = setTimeout(() => setIsMounted(true), 100);
@@ -57,6 +65,22 @@ export default function CreatePostCard() {
 
     const handleUseCurrentLocation = () => {
         setLocationQuery("Current Location");
+    };
+
+    const handleSubmit = () => {
+        console.log(location);
+
+        /*
+        Send to backend:
+    
+        {
+          caption,
+          images,
+          address: location.address,
+          latitude: location.latitude,
+          longitude: location.longitude
+        }
+        */
     };
 
     const handlePost = async () => {
@@ -210,24 +234,27 @@ export default function CreatePostCard() {
                 {/* Location Action Section */}
                 <div className="mt-xl p-md bg-surface-bright rounded-2xl border border-outline-variant/20">
                     <div className="flex flex-col md:flex-row gap-md">
-                        <button
-                            onClick={handleUseCurrentLocation}
-                            className="flex-1 flex items-center justify-center gap-sm bg-white border border-outline-variant/40 hover:border-primary py-3 rounded-xl font-label-md text-label-md transition-all active:scale-[0.98] shadow-sm"
-                        >
-                            <LocateFixed className="w-5 h-5 text-primary" />
-                            Use Current Location
-                        </button>
+                        <CurrentLocation onLocationChange={setLocation} />
+                        
                         <div className="flex-[1.5] relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
-                            <input
-                                value={locationQuery}
-                                onChange={(e) => setLocationQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant/40 focus:border-primary focus:ring-primary/20 font-body-sm text-body-sm bg-white shadow-sm"
-                                placeholder="Search location..."
-                                type="text"
-                            />
+                           <SearchPlace onLocationChange={setLocation}/>
                         </div>
                     </div>
+                </div>
+                <div className="mx-auto max-w-full space-y-6 p-6">
+                    
+                    <LocationPicker
+                        value={location}
+                        onChange={setLocation}
+                    />
+
+                    <button
+                        onClick={handleSubmit}
+                        className="rounded-lg bg-green-600 px-5 py-3 text-white"
+                    >
+                        Create Post
+                    </button>
                 </div>
             </div>
 
