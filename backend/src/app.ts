@@ -5,6 +5,7 @@ import helmet from "helmet";
 import healthRoutes from "./routes/health/health.route.js";
 import authRouter from "./routes/auth.route.js"
 import profileRouter from "./routes/profile.route.js"
+import postRouter from "./routes/post.route.js"
 const app = express();
 
 app.use(express.json());
@@ -14,5 +15,6 @@ app.use(helmet());
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/post", postRouter)
 
 export default app;

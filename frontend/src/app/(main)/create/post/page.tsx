@@ -13,10 +13,19 @@ import {
 } from "lucide-react";
 import { CurrentLocation, LocationPicker, SelectedLocation } from "@/components/location";
 import SearchPlace from "@/components/location/SearchPlace";
+import { useAuth } from "@/hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import { handleCreatePost } from "@/service/post";
+import { toast } from "sonner";
+import Header from "@/components/create-post/Header";
+import CategorySelecter from "@/components/create-post/CategorySelecter";
+import ImageSelect from "@/components/create-post/ImageSelect";
 
 interface MediaItem {
     id: string;
-    src: string;
+    file: File; // current file — either original or cropped
+    previewUrl: string;
+    originalSrc: string; // untouched source, used if user re-crops
 }
 
 const CATEGORIES = ["General", "Nature", "Food", "Traffic", "Alert", "Lost & Found"] as const;
@@ -29,9 +38,8 @@ export default function CreatePostCard() {
     const [isMounted, setIsMounted] = useState(false);
     const [postText, setPostText] = useState("");
     const [activeCategory, setActiveCategory] = useState<Category>("General");
-    const [media, setMedia] = useState<MediaItem[]>([]);
-    const [locationQuery, setLocationQuery] = useState("");
-    const [isPosting, setIsPosting] = useState(false);
+    const [media, setMedia] = useState<File[]>([]);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [location, setLocation] =
         useState<SelectedLocation>({
@@ -39,33 +47,31 @@ export default function CreatePostCard() {
             latitude: 28.6139,
             longitude: 77.209,
         });
-
+    const { user } = useAuth();
     useEffect(() => {
         const timer = setTimeout(() => setIsMounted(true), 100);
         return () => clearTimeout(timer);
     }, []);
 
-    const removeMedia = (id: string) => {
+    // const removeMedia = (id: string) => {
 
-        setMedia((prev) => prev.filter((item) => item.id !== id));
-    };
+    //     setMedia((prev) => prev.filter((item) => item.id !== id));
+    // };
 
-    const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
+    // const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    //     const files = e.target.files;
+    //     if (!files) return;
 
-        const newItems: MediaItem[] = Array.from(files).map((file) => ({
-            id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            src: URL.createObjectURL(file),
-        }));
+    //     const newItems: MediaItem[] = Array.from(files).map((file) => ({
+    //         id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    //         src: URL.createObjectURL(file),
+    //     }));
 
-        setMedia((prev) => [...prev, ...newItems]);
-        e.target.value = "";
-    };
+    //     setMedia((prev) => [...prev, ...newItems]);
+    //     e.target.value = "";
+    // };
 
-    const handleUseCurrentLocation = () => {
-        setLocationQuery("Current Location");
-    };
+
 
     const handleSubmit = () => {
         console.log(location);
@@ -84,61 +90,41 @@ export default function CreatePostCard() {
     };
 
     const handlePost = async () => {
-        setIsPosting(true);
         try {
             // Simulate an API call — replace with a real request to your posts endpoint.
             await new Promise((resolve) => setTimeout(resolve, 1200));
             setPostText("");
             setMedia([]);
-            setLocationQuery("");
             setActiveCategory("General");
         } finally {
-            setIsPosting(false);
         }
     };
+
+    const handleCreatePostMutation = useMutation({
+        mutationFn: handleCreatePost,
+        onSuccess: () => {
+            toast.success("Post created successfully!");
+            setPostText("");
+            setMedia([]);
+            setActiveCategory("General");
+        },
+        onError: async (error) => {
+            toast.error("Something went wrong!");
+        }
+    })
 
     return (
         <div
             className={`bg-white rounded-3xl shadow-xl overflow-hidden border border-outline-variant/20 transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${isMounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
                 }`}
         >
+             <ImageSelect
+                    aspect={4 / 3}
+                    maxImages={6}
+                    onChange={setMedia} // just keeps files in state, no upload yet
+                />
             {/* Header Section */}
-            <div className="p-lg md:p-xl pb-0">
-                <div className="flex items-center justify-between mb-md">
-                    <div className="flex items-center gap-sm">
-                        <button
-                            aria-label="Close"
-                            className="p-2 hover:bg-surface-container rounded-full transition-all active:scale-[0.98]"
-                        >
-                            <X className="w-5 h-5 text-on-surface-variant" />
-                        </button>
-                        <div>
-                            <h1 className="font-headline-md text-headline-md text-on-surface">Create Post</h1>
-                            <p className="font-body-sm text-body-sm text-on-surface-variant">
-                                Share what&apos;s happening around you.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* User Identity */}
-                <div className="flex items-center gap-md py-md">
-                    <div className="w-12 h-12 rounded-full overflow-hidden shadow-md">
-                        <img
-                            className="w-full h-full object-cover"
-                            alt="Alex Rivera"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVQAVmR-siqiRWc_CSjXVv1b_3utLdj8nHpWTRx_WHk9lwiEf5JW1ODLnqOqLZZ6-Aw9IiSn8DPd-ZI3IVABOP-csuVNyfMOK-xN6n9smQBQkKhiPzI43m-9IM2tJ44yEhNi5FMro7Zv_Drei6EiMAqIMpLGd72IxqCFHMa2U4KsQXv2Wk_i6MmaOgHasPVn2BZg9SYdsio8CG3k-xy8gJPBEV1R9HwZLTcj5PpYAWS_MM_Em_dy_gkA"
-                        />
-                    </div>
-                    <div>
-                        <div className="font-label-md text-label-md text-on-surface">Alex Rivera</div>
-                        <div className="flex items-center gap-1 bg-surface-container text-primary px-2 py-0.5 rounded-full mt-1">
-                            <MapPin className="w-3.5 h-3.5" fill="currentColor" />
-                            <span className="text-[12px] font-semibold">Greenwich Village</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Header name={user?.name} address={location.address} />
 
             {/* Composer Content */}
             <div className="px-lg md:px-xl pb-xl">
@@ -157,36 +143,16 @@ export default function CreatePostCard() {
                 </div>
 
                 {/* Category Selector */}
-                <div className="mt-xl">
-                    <label className="block font-label-md text-label-md text-on-surface-variant mb-md uppercase tracking-widest">
-                        Select Category
-                    </label>
-                    <div className="flex flex-wrap gap-sm">
-                        {CATEGORIES.map((category) => {
-                            const isActive = activeCategory === category;
-                            return (
-                                <button
-                                    key={category}
-                                    onClick={() => setActiveCategory(category)}
-                                    className={`px-md py-2 rounded-full transition-all font-label-md text-label-md flex items-center gap-xs ${isActive
-                                        ? "bg-primary text-white"
-                                        : "bg-surface-container hover:bg-surface-container-high"
-                                        }`}
-                                >
-                                    {category === "Alert" && <AlertTriangle className="w-[18px] h-[18px]" />}
-                                    {category}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+                <CategorySelecter activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                 {/* Media Upload Area */}
                 <div className="mt-xl">
                     <label className="block font-label-md text-label-md text-on-surface-variant mb-md uppercase tracking-widest">
                         Media
                     </label>
+
                     <div className="grid grid-cols-3 gap-md">
+
                         {
                             media?.length > 0 &&
                             <>
@@ -211,8 +177,10 @@ export default function CreatePostCard() {
                         }
 
 
+
+
                         {/* Upload Slot */}
-                        <button
+                        {/* <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="aspect-square rounded-2xl border-2 border-dashed border-outline-variant/50 hover:border-primary/50 hover:bg-primary-container/5 cursor-pointer transition-all flex flex-col items-center justify-center text-on-surface-variant"
@@ -227,23 +195,26 @@ export default function CreatePostCard() {
                             multiple
                             className="hidden"
                             onChange={handleFileSelect}
-                        />
+                        /> */}
                     </div>
                 </div>
+
+
+               
 
                 {/* Location Action Section */}
                 <div className="mt-xl p-md bg-surface-bright rounded-2xl border border-outline-variant/20">
                     <div className="flex flex-col md:flex-row gap-md">
                         <CurrentLocation onLocationChange={setLocation} />
-                        
+
                         <div className="flex-[1.5] relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
-                           <SearchPlace onLocationChange={setLocation}/>
+                            <SearchPlace onLocationChange={setLocation} />
                         </div>
                     </div>
                 </div>
                 <div className="mx-auto max-w-full space-y-6 p-6">
-                    
+
                     <LocationPicker
                         value={location}
                         onChange={setLocation}
@@ -270,11 +241,11 @@ export default function CreatePostCard() {
                     </button>
                     <button
                         onClick={handlePost}
-                        disabled={isPosting || postText.trim().length === 0}
+                        disabled={handleCreatePostMutation.isPending || postText.trim().length === 0}
                         className="flex-1 md:flex-none px-3xl py-3 rounded-full bg-primary text-white font-label-md text-label-md shadow-lg shadow-primary/20 hover:bg-on-primary-fixed-variant transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        {isPosting ? "Posting..." : "Post"}
-                        {!isPosting && <Send className="w-5 h-5" />}
+                        {handleCreatePostMutation.isPending ? "Posting..." : "Post"}
+                        {!handleCreatePostMutation.isPending && <Send className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
