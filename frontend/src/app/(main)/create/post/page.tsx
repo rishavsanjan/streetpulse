@@ -1,46 +1,49 @@
-"use client";
+"use client"
+import { CurrentLocation, LocationPicker } from '@/components/location'
+import SearchPlace from '@/components/location/SearchPlace'
+import { useAuth } from '@/hooks/useAuth'
+import api from '@/lib/axios'
+import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
+import { X } from 'lucide-react'
+import React, { useState } from 'react'
+import { toast } from 'sonner'
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import {
-    X,
-    MapPin,
-    AlertTriangle,
-    ImagePlus,
-    LocateFixed,
-    Search,
-    Globe,
-    Send,
-} from "lucide-react";
-import { CurrentLocation, LocationPicker, SelectedLocation } from "@/components/location";
-import SearchPlace from "@/components/location/SearchPlace";
-import { useAuth } from "@/hooks/useAuth";
-import { useMutation } from "@tanstack/react-query";
-import { handleCreatePost } from "@/service/post";
-import { toast } from "sonner";
-import Header from "@/components/create-post/Header";
-import CategorySelecter from "@/components/create-post/CategorySelecter";
-import ImageSelect from "@/components/create-post/ImageSelect";
-
-interface MediaItem {
-    id: string;
-    file: File; // current file — either original or cropped
-    previewUrl: string;
-    originalSrc: string; // untouched source, used if user re-crops
+interface CreatePost {
+    caption?: string,
+    category: Category,
+    placeName?: string,
+    image: File[]
 }
 
-const CATEGORIES = ["General", "Nature", "Food", "Traffic", "Alert", "Lost & Found"] as const;
-type Category = (typeof CATEGORIES)[number];
+type Category = "General" |
+    "Nature" |
+    "Food" |
+    "Traffic" |
+    "Alert" |
+    "LostFound"
 
-const MAX_CHARS = 2200;
+const categories: Category[] = ["General",
+    "Nature",
+    "Food",
+    "Traffic",
+    "Alert",
+    "LostFound"];
 
+interface SelectedLocation {
+    latitude: number
+    longitude: number
+    address: string,
+}
 
-export default function CreatePostCard() {
-    const [isMounted, setIsMounted] = useState(false);
-    const [postText, setPostText] = useState("");
-    const [activeCategory, setActiveCategory] = useState<Category>("General");
-    const [media, setMedia] = useState<File[]>([]);
+const CreatePost = () => {
+    const [post, setPost] = useState<CreatePost>({
+        caption: "",
+        category: "General",
+        placeName: "",
+        image: []
+    });
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [location, setLocation] =
         useState<SelectedLocation>({
             address: "",
@@ -48,207 +51,179 @@ export default function CreatePostCard() {
             longitude: 77.209,
         });
     const { user } = useAuth();
-    useEffect(() => {
-        const timer = setTimeout(() => setIsMounted(true), 100);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // const removeMedia = (id: string) => {
-
-    //     setMedia((prev) => prev.filter((item) => item.id !== id));
-    // };
-
-    // const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
-    //     const files = e.target.files;
-    //     if (!files) return;
-
-    //     const newItems: MediaItem[] = Array.from(files).map((file) => ({
-    //         id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    //         src: URL.createObjectURL(file),
-    //     }));
-
-    //     setMedia((prev) => [...prev, ...newItems]);
-    //     e.target.value = "";
-    // };
 
 
+    const uploadImage = async (file: File) => {
+        const formData = new FormData();
 
-    const handleSubmit = () => {
-        console.log(location);
+        formData.append("file", file);
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
 
-        /*
-        Send to backend:
-    
-        {
-          caption,
-          images,
-          address: location.address,
-          latitude: location.latitude,
-          longitude: location.longitude
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!}/image/upload`,
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error("Upload failed");
         }
-        */
-    };
 
-    const handlePost = async () => {
-        try {
-            // Simulate an API call — replace with a real request to your posts endpoint.
-            await new Promise((resolve) => setTimeout(resolve, 1200));
-            setPostText("");
-            setMedia([]);
-            setActiveCategory("General");
-        } finally {
-        }
-    };
+        return res.json();
 
-    const handleCreatePostMutation = useMutation({
-        mutationFn: handleCreatePost,
-        onSuccess: () => {
-            toast.success("Post created successfully!");
-            setPostText("");
-            setMedia([]);
-            setActiveCategory("General");
+
+    }
+
+
+    const handlePostUploadMutation = useMutation({
+        mutationFn: async () => {
+            const data = post
+            const uploadedImages = await Promise.all(
+                post.image.map(async (image) => {
+                    const data = await uploadImage(image);
+                    return data.secure_url;
+                })
+            );
+
+            console.log(uploadedImages)
+
+            const res = await api.post(`/post`, {
+                caption: post.caption,
+                image: uploadedImages,
+                category: post.category,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                address: location.address,
+            })
+        },
+
+        onSuccess: async () => {
+            toast.success("Post created successfully")
+
         },
         onError: async (error) => {
-            toast.error("Something went wrong!");
+            if (axios.isAxiosError(error)) {
+                console.log("Backend response:", error.response?.data);
+                console.log("Status:", error.response?.status);
+
+                toast.error(
+                    error.response?.data?.message || "Post creation failed"
+                );
+            } else {
+                console.error(error);
+                toast.error("Something went wrong");
+            }
         }
     })
 
+    console.log(post)
+
+
+
     return (
-        <div
-            className={`bg-white rounded-3xl shadow-xl overflow-hidden border border-outline-variant/20 transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${isMounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                }`}
-        >
-             <ImageSelect
-                    aspect={4 / 3}
-                    maxImages={6}
-                    onChange={setMedia} // just keeps files in state, no upload yet
+        <div>
+            <div>
+                {user?.name ?? "login"}
+            </div>
+            <div>
+                <span>Caption</span>
+                <input
+                    placeholder='Caption'
+                    onChange={(e) =>
+                        setPost((prev) => ({
+                            ...prev,
+                            caption: e.target.value,
+                        }))
+                    }
                 />
-            {/* Header Section */}
-            <Header name={user?.name} address={location.address} />
+            </div>
+            <div className='flex flex-row space-x-4'>
+                {
+                    categories.map((m) => {
+                        return (
+                            <div className={`space-x-4  `} key={m}>
+                                <button
+                                    onClick={() => {
+                                        setPost(prev => ({
+                                            ...prev,
+                                            category: m
+                                        }))
+                                    }}
+                                    className={`${post.category === m ? "bg-green-400" : "bg-gray-300"} space-x-4 `}>
+                                    {m}
+                                </button>
 
-            {/* Composer Content */}
-            <div className="px-lg md:px-xl pb-xl">
-                {/* Text Area */}
-                <div className="relative group">
-                    <textarea
-                        value={postText}
-                        onChange={(e) => setPostText(e.target.value.slice(0, MAX_CHARS))}
-                        maxLength={MAX_CHARS}
-                        className="w-full h-40 border-none focus:ring-0 text-body-lg font-body-lg text-on-surface placeholder-on-surface-variant/40 resize-none custom-scrollbar p-0"
-                        placeholder="Share something with your community..."
-                    />
-                    <div className="absolute bottom-2 right-2 font-label-sm text-label-sm text-outline-variant">
-                        {postText.length} / {MAX_CHARS}
-                    </div>
-                </div>
-
-                {/* Category Selector */}
-                <CategorySelecter activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-
-                {/* Media Upload Area */}
-                <div className="mt-xl">
-                    <label className="block font-label-md text-label-md text-on-surface-variant mb-md uppercase tracking-widest">
-                        Media
-                    </label>
-
-                    <div className="grid grid-cols-3 gap-md">
-
-                        {
-                            media?.length > 0 &&
-                            <>
-                                {media?.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="relative aspect-square rounded-2xl overflow-hidden group border border-outline-variant/20 shadow-sm"
-                                    >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img className="w-full h-full object-cover" alt="Post media preview" src={item.src} />
-                                        <button
-                                            aria-label="Remove media"
-                                            onClick={() => removeMedia(item.id)}
-                                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <X className="w-[18px] h-[18px]" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </>
-
+                            </div>
+                        )
+                    })
+                }
+            </div>
+            <div className=''>
+                <input
+                    type='file'
+                    accept='/image'
+                    onChange={(e) => {
+                        const files = e.target.files;
+                        if (files) {
+                            setPost((prev) => ({
+                                ...prev,
+                                image: [...prev.image, ...Array.from(files)]
+                            }))
                         }
+                    }}
+                />
+                <div className='flex flex-wrap'>
+                    {
+                        post.image.map((image, index) => (
+                            <div key={index} className='relative'>
+                                <button
+                                    onClick={() => {
+                                        setPost((prev) => ({
+                                            ...prev,
+                                            image: prev.image.filter((_, i) => i !== index)
+                                        }))
+                                    }}
+                                    className='absolute right-0 bg-gray-500'>
+                                    <X />
+                                </button>
 
+                                <img
 
+                                    src={URL.createObjectURL(image)}
+                                    alt=""
+                                    className="w-32 h-32 object-cover rounded "
+                                />
+                            </div>
 
-
-                        {/* Upload Slot */}
-                        {/* <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="aspect-square rounded-2xl border-2 border-dashed border-outline-variant/50 hover:border-primary/50 hover:bg-primary-container/5 cursor-pointer transition-all flex flex-col items-center justify-center text-on-surface-variant"
-                        >
-                            <ImagePlus className="w-8 h-8 mb-2" />
-                            <span className="font-label-sm text-label-sm">Add More</span>
-                        </button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        /> */}
-                    </div>
+                        ))
+                    }
                 </div>
 
-
-               
-
-                {/* Location Action Section */}
-                <div className="mt-xl p-md bg-surface-bright rounded-2xl border border-outline-variant/20">
-                    <div className="flex flex-col md:flex-row gap-md">
-                        <CurrentLocation onLocationChange={setLocation} />
-
-                        <div className="flex-[1.5] relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
-                            <SearchPlace onLocationChange={setLocation} />
-                        </div>
-                    </div>
-                </div>
-                <div className="mx-auto max-w-full space-y-6 p-6">
-
-                    <LocationPicker
-                        value={location}
-                        onChange={setLocation}
-                    />
-
-                    <button
-                        onClick={handleSubmit}
-                        className="rounded-lg bg-green-600 px-5 py-3 text-white"
-                    >
-                        Create Post
-                    </button>
-                </div>
             </div>
 
-            {/* Action Bar */}
-            <div className="px-lg md:px-xl py-lg bg-surface-container/30 border-t border-outline-variant/10 flex flex-col md:flex-row items-center justify-between gap-md">
-                <div className="flex items-center gap-sm text-on-surface-variant">
-                    <Globe className="w-5 h-5 text-primary-container" fill="currentColor" />
-                    <span className="font-body-sm text-body-sm">Your post will be visible to nearby users.</span>
+            <div>
+                <span>location</span>
+                <div className='flex flex-row'>
+                    <CurrentLocation onLocationChange={setLocation} />
+                    <SearchPlace onLocationChange={setLocation} />
                 </div>
-                <div className="flex items-center gap-md w-full md:w-auto">
-                    <button className="flex-1 md:flex-none px-xl py-3 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-all">
-                        Drafts
-                    </button>
-                    <button
-                        onClick={handlePost}
-                        disabled={handleCreatePostMutation.isPending || postText.trim().length === 0}
-                        className="flex-1 md:flex-none px-3xl py-3 rounded-full bg-primary text-white font-label-md text-label-md shadow-lg shadow-primary/20 hover:bg-on-primary-fixed-variant transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        {handleCreatePostMutation.isPending ? "Posting..." : "Post"}
-                        {!handleCreatePostMutation.isPending && <Send className="w-5 h-5" />}
-                    </button>
-                </div>
+
+                <LocationPicker value={location} onChange={setLocation} />
             </div>
+
+            <button
+                disabled={handlePostUploadMutation.isPending}
+                onClick={() => { handlePostUploadMutation.mutate() }}
+                className='bg-green-400 p-3'>
+                {
+                    handlePostUploadMutation.isPending ? 'Creating post....' : 'Create Post'
+                }
+
+            </button>
         </div>
-    );
+    )
 }
+
+export default CreatePost

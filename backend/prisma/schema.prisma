@@ -78,8 +78,8 @@ model Post {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  images        Image[]
-  videos        Video[]
+  image        Image[]
+  video        Video[]
   notifications Notification[]
 
   @@index([createdAt])
