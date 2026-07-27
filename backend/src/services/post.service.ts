@@ -4,8 +4,19 @@ import { CreatePostSchema } from "../validators/post.validator.js";
 export const createPostService = async (userId: string, data: CreatePostSchema) => {
     const post = await prisma.post.create({
         data: {
+            caption: data.caption,
+            category: data.category,
             userId,
-            ...data
+            placeName: data.placeName,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            address: data.address,
+
+            images: {
+                create: data.image.map((url) => ({
+                    url,
+                })),
+            },
         }
     })
 

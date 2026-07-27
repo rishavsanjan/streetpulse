@@ -78,8 +78,8 @@ model Post {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  image        Image[]
-  video        Video[]
+  images        Image[]
+  videos        Video[]
   notifications Notification[]
 
   @@index([createdAt])
@@ -94,6 +94,7 @@ enum PostCategory {
   Traffic
   Alert
   LostFound
+  Help
 }
 
 model Event {
@@ -247,7 +248,7 @@ enum NotificationType {
   Mention
 }
 
-model Vote {
+model  Vote {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

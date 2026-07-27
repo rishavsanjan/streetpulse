@@ -2,7 +2,7 @@ import { z } from "zod"
 
 export const createPostSchema = z.object({
     caption: z.string().max(500).optional(),
-    image: z.array(z.string()).optional(),
+   image: z.array(z.string()).default([]),
 
     category: z.enum([
         "General",
