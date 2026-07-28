@@ -13,3 +13,48 @@ export interface CreatePost {
     longitude: number
     address : string
 }
+
+export interface Post {
+  id: string;
+  caption: string | null;
+  category: "General" | "Nature" | "Food" | "Traffic" | "Alert" | "LostFound";
+
+  placeName: string | null;
+  latitude: number;
+  longitude: number;
+  address: string;
+
+  userId: string;
+  user: User;
+
+  images: Image[];
+  votes: Vote[]
+
+  createdAt: string;
+  updatedAt: string;
+
+  _count: {
+    comments: number;
+    votes: number;
+  };
+}
+
+interface Vote {
+  id: string,
+  userId: string,
+  postId: string,
+  reaction: 'Like' | 'Love' | 'Fire'
+}
+
+interface Image {
+  id: string;
+  url: string;
+  postId: string;
+  createdAt: string;
+}
+
+interface User {
+  id: string;
+  name: string;
+  profile: null;
+}

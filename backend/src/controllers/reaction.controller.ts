@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { reactionSchema } from "../validators/reaction.validator.js";
-import { addReactionService, removeReactionService } from "../services/reaction.service.js";
+import { addReactionService, removeReactionService, updateReactionService } from "../services/reaction.service.js";
 
 
 type AddReactionProps = {
-    id : string
+    id: string
 }
 export const addReaction = async (req: Request<AddReactionProps>, res: Response) => {
     const result = reactionSchema.safeParse(req.body);
@@ -32,11 +32,11 @@ export const addReaction = async (req: Request<AddReactionProps>, res: Response)
 }
 
 type DeleteReactionProps = {
-    id : string
+    id: string
 }
 
 export const removeReaction = async (req: Request<DeleteReactionProps>, res: Response) => {
-    
+
 
     try {
         const vote = removeReactionService(req.user.id, req.params.id);
@@ -49,6 +49,36 @@ export const removeReaction = async (req: Request<DeleteReactionProps>, res: Res
         return res.status(400).json({
             success: false,
             message: error instanceof Error ? error.message : "Unable to remove vote",
+        });
+    }
+}
+
+type UpdateReactionProps = {
+    id: string
+}
+
+export const updateReaction = async (req: Request<UpdateReactionProps>, res: Response) => {
+
+    const result = reactionSchema.safeParse(req.body);
+
+    if (!result.success) {
+        return res.status(400).json({
+            success: false,
+            errors: result.error.flatten().fieldErrors,
+        });
+    }
+
+    try {
+        const vote = updateReactionService(req.user.id, req.params.id, result.data.reaction);
+        return res.status(201).json({
+            success: true,
+            message: "Reaction updated successfully",
+            data: vote,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error instanceof Error ? error.message : "Unable to add vote",
         });
     }
 }

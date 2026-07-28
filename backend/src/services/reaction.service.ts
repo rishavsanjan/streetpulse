@@ -39,3 +39,22 @@ export const removeReactionService = async (userId: string, postId:string) => {
     return vote;
 
 }
+
+export const updateReactionService = async (userId: string, postId:string, reaction : 'Like' | 'Love' | 'Fire') => {
+    
+    const vote = await prisma.vote.update({
+        where:{
+            userId_postId:{
+                userId,
+                postId
+            }
+        },
+        data:{
+            reaction:reaction
+        }
+    })
+
+
+    return vote;
+
+}
