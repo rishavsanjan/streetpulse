@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route.js"
 import profileRouter from "./routes/profile.route.js"
 import postRouter from "./routes/post.route.js"
 import reactionRouter from "./routes/reaction.route.js"
+import commentRouter from "./routes/comment.route.js"
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/post", postRouter)
 app.use("/api/reaction", reactionRouter)
+app.use("/api/comment", commentRouter)
 
 export default app;

@@ -4,9 +4,9 @@ import { addComment, deleteComment, getComment, updateComment } from "../control
 
 const router = Router();
 
-router.post(":/id", authMiddleware, addComment)
+router.post("/:id", authMiddleware, addComment)
 router.get("/:id", getComment)
 router.patch("/:id", authMiddleware, updateComment)
-router.delete("/id", authMiddleware, deleteComment)
+router.delete("/:id", authMiddleware, deleteComment)
 
 export default router;

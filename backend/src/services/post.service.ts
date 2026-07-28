@@ -68,7 +68,8 @@ export const postDetailService = async (postId: string) => {
                         }
                     }
                 }
-            }
+            },
+            comments:true
         }
     })
 
