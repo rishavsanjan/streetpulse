@@ -29,6 +29,7 @@ export interface Post {
 
   images: Image[];
   votes: Vote[]
+  comments : Comment[]
 
   createdAt: string;
   updatedAt: string;
@@ -37,6 +38,8 @@ export interface Post {
     comments: number;
     votes: number;
   };
+
+
 }
 
 interface Vote {
@@ -57,4 +60,13 @@ interface User {
   id: string;
   name: string;
   profile: null;
+}
+
+interface Comment {
+  id : string,
+  text : string,
+  parentId: string | null
+  postId: string;
+  userId : string,
+  user : User
 }

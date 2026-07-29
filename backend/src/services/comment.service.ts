@@ -31,6 +31,14 @@ export const getCommentService = async (postId: string) => {
         orderBy: {
             createdAt: 'asc'
         },
+        select:{
+            user:{
+                select:{
+                    name:true,
+                    id:true
+                }
+            }
+        },
         skip: 0,
         take: 20
     })

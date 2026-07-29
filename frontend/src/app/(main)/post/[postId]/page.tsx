@@ -1,14 +1,18 @@
 "use client"
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
 import { Post } from '@/types/post';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useSearchParams } from 'next/navigation'
-import React, { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner';
 
 const PostDetails = () => {
-  const { postId } = useParams();
+  const { postId } = useParams<{ postId: string }>();
   const [commentText, setCommentText] = useState<string>("");
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const getPostDetails = useQuery({
     queryKey: ['post-details', postId],
     queryFn: async () => {
@@ -20,10 +24,6 @@ const PostDetails = () => {
     }
   })
 
-
-
-  
-
   const handleAddCommentMutation = useMutation({
     mutationKey: ['comment', postId],
     mutationFn: async ({ parentId }: { parentId: string | null }) => {
@@ -34,8 +34,31 @@ const PostDetails = () => {
 
       return res.data
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("Comment added successfully")
+      const newComment = {
+        id: crypto.randomUUID(),
+        postId,
+        userId: user!.id,
+        text: commentText,
+        parentId: variables.parentId,
+        user: {
+          id: user!.id,
+          name: user!.name,
+          profile: null
+        }
+      };
+
+      queryClient.setQueryData<Post>(["post-details", postId], (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          comments: [
+            ...old.comments, newComment
+          ]
+        }
+      });
       setCommentText('');
     },
     onError: () => {
@@ -43,10 +66,39 @@ const PostDetails = () => {
     }
   })
 
+  const handleDeleteCommentMutation = useMutation({
+    mutationKey: ['comment-delete', postId],
+    mutationFn: async ({ commentId }: { commentId: string }) => {
+      const res = await api.delete(`/comment/${commentId}`);
+
+      return res.data
+    },
+    onSuccess: (_, variables) => {
+      
+
+      queryClient.setQueryData<Post>(["post-details", postId], (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          comments: [
+            ...old.comments.filter((comment) => comment.id !== variables.commentId)
+          ]
+        }
+      });
+      toast.success("Comment deleted successfully")
+    },
+    onError: () => {
+      toast.error("Something went weong")
+    }
+  })
+
+
+
   const data: Post = getPostDetails.data ?? {};
 
-  if(getPostDetails.isPending) {
-    return(
+  if (getPostDetails.isPending) {
+    return (
       <div>
         loading..
       </div>
@@ -56,7 +108,7 @@ const PostDetails = () => {
 
 
   return (
-    <div>
+    <div className='space-y-8 flex flex-col' >
       <span> page : {postId}</span>
       <div>
         <div className='flex flex-col'>
@@ -73,6 +125,28 @@ const PostDetails = () => {
               </div>
             ))
           }
+        </div>
+        <div>
+          <span>comments</span>
+          <div>
+            {
+              data.comments.map((comment) => (
+                <div className='flex flex-col bg-green-300' key={comment.id}>
+                  <span>{comment.user.name}</span>
+                  <span>{comment.text}</span>
+                  <button
+                    onClick={() => {
+                      handleDeleteCommentMutation.mutate({
+                        commentId: comment.id
+                      })
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))
+            }
+          </div>
         </div>
       </div>
       <div>
