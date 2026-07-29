@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
 import { Post } from '@/types/post';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Edit, Trash } from 'lucide-react';
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner';
@@ -10,6 +11,9 @@ import { toast } from 'sonner';
 const PostDetails = () => {
   const { postId } = useParams<{ postId: string }>();
   const [commentText, setCommentText] = useState<string>("");
+  const [isEditingComment, setIsEditingCommenting] = useState<string>("");
+  const [updateCommentText, setUpdateCommentText] = useState<string>("");
+
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -74,7 +78,7 @@ const PostDetails = () => {
       return res.data
     },
     onSuccess: (_, variables) => {
-      
+
 
       queryClient.setQueryData<Post>(["post-details", postId], (old) => {
         if (!old) return old;
@@ -91,7 +95,50 @@ const PostDetails = () => {
     onError: () => {
       toast.error("Something went weong")
     }
-  })
+  });
+
+  const hanldleUpdateCommentMutation = useMutation({
+    mutationKey: ['comment-update', postId],
+    mutationFn: async ({ commentId }: { commentId: string }) => {
+      const res = await api.patch(`/comment/${commentId}`, {
+        text: updateCommentText
+      });
+
+      return res.data
+    },
+    onSuccess: (_, variables) => {
+
+
+      queryClient.setQueryData<Post>(["post-details", postId], (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          comments: [
+            ...old.comments.map((comment) => {
+              if (comment.id === variables.commentId) {
+                return {
+                  ...comment,
+                  text: updateCommentText
+                }
+              }
+
+              return comment;
+            })
+          ]
+        }
+      });
+      toast.success("Comment updated successfully")
+      setUpdateCommentText("");
+      setIsEditingCommenting("");
+    },
+    onError: () => {
+      toast.error("Something went weong")
+    }
+  });
+
+
+
 
 
 
@@ -133,16 +180,70 @@ const PostDetails = () => {
               data.comments.map((comment) => (
                 <div className='flex flex-col bg-green-300' key={comment.id}>
                   <span>{comment.user.name}</span>
-                  <span>{comment.text}</span>
-                  <button
-                    onClick={() => {
-                      handleDeleteCommentMutation.mutate({
-                        commentId: comment.id
-                      })
-                    }}
-                  >
-                    Delete
-                  </button>
+                  {
+                    comment.id === isEditingComment ?
+                      <div className='flex flex-row space-x-4'>
+                        <input
+                          onChange={(e) => {
+                            setUpdateCommentText(e.target.value);
+                          }}
+                        />
+                        <button
+                          className=''
+                          onClick={() => {
+                            setIsEditingCommenting("");
+                            setUpdateCommentText("");
+
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className=''
+                          onClick={() => {
+                            hanldleUpdateCommentMutation.mutate({
+                              commentId: comment.id
+                            })
+                            
+                          }}
+                        >
+                          Update
+                        </button>
+
+                      </div>
+                      :
+                      <span>{comment.text}</span>
+
+                  }
+
+                  {
+                    comment.userId === user?.id &&
+                    <button
+                      className='flex-row flex'
+                      onClick={() => {
+
+                        setIsEditingCommenting(comment.id)
+                      }}
+                    >
+                      <Edit />
+                      Edit
+                    </button>
+                  }
+                  {
+                    comment.userId === user?.id &&
+                    <button
+                      className='flex-row flex'
+                      onClick={() => {
+                        handleDeleteCommentMutation.mutate({
+                          commentId: comment.id
+                        })
+                      }}
+                    >
+                      <Trash />
+                      Delete
+                    </button>
+                  }
+
                 </div>
               ))
             }
