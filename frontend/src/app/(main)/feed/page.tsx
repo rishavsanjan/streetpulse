@@ -1,11 +1,13 @@
 "use client"
 
+import ReactionModel from '@/components/ReactionModel';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
 import { queryClient } from '@/lib/queryClient';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Flame, Heart, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Flame, Heart, MessageCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface Post {
@@ -68,6 +70,7 @@ type ReactionVariables = {
 
 const Page = () => {
   const { user, loading } = useAuth();
+  const [showReactionModel, setShowReactionModel] = useState("");
   console.log(user)
   const queryClient = useQueryClient();
   const getPosts = useQuery({
@@ -152,6 +155,15 @@ const Page = () => {
 
   })
 
+  const handleAddReaction = ({ reactionAction, reactionType, postId }: ReactionVariables) => {
+
+    handleReactionMutation.mutate({
+      reactionAction,
+      reactionType,
+      postId
+    })
+  }
+
 
 
 
@@ -173,7 +185,7 @@ const Page = () => {
         <p>{user?.name}</p>
         <p>{user?.email}</p>
       </div>
-      <div>
+      <div className='pb-20'>
         {
           data.map((post) => (
             <div key={post.id} className='bg-red-500'>
@@ -195,98 +207,99 @@ const Page = () => {
                 </div>
               </Link>
 
-              <div >
-                {
+              <div
+                onMouseEnter={() => {
+                  setShowReactionModel(post.id)
+                }}
+                onMouseLeave={() => {
+                  setShowReactionModel("");
+                }}
+                className='flex flex-col'
 
-                  post.votes[0]?.reaction === 'Like' ?
-                    <button onClick={() => {
-                      handleReactionMutation.mutate({
-                        reactionAction: 'remove',
-                        reactionType: 'Like',
-                        postId: post.id
-                      })
-                    }}>
-                      <ThumbsUp color='blue' fill='blue' />
-                    </button>
-
-                    :
-
-                    <button
-                      onClick={() => {
-                        handleReactionMutation.mutate({
-                          reactionAction: 'add',
-                          reactionType: 'Like',
-                          postId: post.id
-                        })
-                      }}
-                    >
-
-                      <ThumbsUp />
-                    </button>
-
-                }
-
-                {
-                  post.votes[0]?.reaction === 'Love' ?
-                    <button onClick={() => {
-                      handleReactionMutation.mutate({
-                        reactionAction: 'remove',
-                        reactionType: 'Love',
-                        postId: post.id
-                      })
-                    }}>
-                      <Heart color='red' fill='red' />
-                    </button>
-
-                    :
-
-                    <button
-                      onClick={() => {
-                        handleReactionMutation.mutate({
-                          reactionAction: 'add',
-                          reactionType: 'Love',
-                          postId: post.id
-                        })
-                      }}
-                    >
-
-                      <Heart />
-                    </button>
-
-                }
-
-                {
-                  post.votes[0]?.reaction === 'Fire' ?
-                    <button onClick={() => {
-                      handleReactionMutation.mutate({
-                        reactionAction: 'remove',
-                        reactionType: 'Fire',
-                        postId: post.id
-                      })
-                    }}>
-                      <Flame color='yellow' fill='yellow' />
-                    </button>
-
-                    :
-
-                    <button
-                      onClick={() => {
-                        handleReactionMutation.mutate({
-                          reactionAction: 'add',
-                          reactionType: 'Fire',
-                          postId: post.id
-                        })
-                      }}
-                    >
-
-                      <Flame />
-                    </button>
-
-                }
+              >
                 <div>
-                  {post._count.votes}
+                  {
+                    showReactionModel === post.id &&
+                    <ReactionModel reaction={post.votes[0]?.reaction} postId={post.id} handleAddReaction={handleAddReaction} disabledButton={handleReactionMutation.isPending} />
+                  }
+                </div>
+                <div className='flex flex-row'>
+                  {
+
+                    post.votes[0]?.reaction === 'Like' ?
+                      <button
+                        disabled={handleReactionMutation.isPending}
+                        onClick={() => {
+                          handleAddReaction({
+                            reactionAction: 'remove',
+                            reactionType: 'Like',
+                            postId: post.id
+                          })
+                        }}>
+                        <ThumbsUp color='blue' fill='blue' />
+                      </button>
+
+                      :
+
+                      post.votes[0]?.reaction === 'Love' ?
+                        <button
+                          disabled={handleReactionMutation.isPending}
+                          onClick={() => {
+                            handleAddReaction({
+                              reactionAction: 'remove',
+                              reactionType: 'Love',
+                              postId: post.id
+                            })
+                          }}>
+                          <Heart color='red' fill='red' />
+                        </button>
+
+                        :
+
+
+                        post.votes[0]?.reaction === 'Fire' ?
+                          <button
+                            disabled={handleReactionMutation.isPending}
+                            onClick={() => {
+                              handleAddReaction({
+                                reactionAction: 'remove',
+                                reactionType: 'Fire',
+                                postId: post.id
+                              })
+                            }}>
+                            <Flame color='yellow' fill='yellow' />
+                          </button>
+
+                          :
+
+                          <button
+                            disabled={handleReactionMutation.isPending}
+
+                            onClick={() => {
+                              handleAddReaction({
+                                reactionAction: 'add',
+                                reactionType: 'Like',
+                                postId: post.id
+                              })
+                            }}
+                          >
+
+                            <ThumbsUp />
+                          </button>
+
+                  }
+                  <div>
+                    {post._count.votes}
+                  </div>
                 </div>
 
+
+
+
+              </div>
+              <div className='flex flex-row'>
+                <MessageCircle />
+                {post._count.comments}
               </div>
             </div>
 
