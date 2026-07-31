@@ -69,13 +69,17 @@ export const postDetailService = async (postId: string) => {
                     }
                 }
             },
-            comments:{
-                include:{
-                    user:{
-                        select:{
+            comments: {
+                include: {
+                    user: {
+                        select: {
                             name: true,
-                            id:true
+                            id: true,
+
                         }
+                    },
+                    replies: {
+                        take: 0
                     }
                 }
             }

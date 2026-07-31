@@ -30,6 +30,7 @@ export interface Post {
   images: Image[];
   votes: Vote[]
   comments : Comment[]
+  
 
   createdAt: string;
   updatedAt: string;
@@ -62,11 +63,12 @@ interface User {
   profile: null;
 }
 
-interface Comment {
+export interface Comment {
   id : string,
   text : string,
   parentId: string | null
   postId: string;
   userId : string,
   user : User
+  replies : Comment[]
 }
