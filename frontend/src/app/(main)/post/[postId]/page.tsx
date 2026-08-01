@@ -1,4 +1,5 @@
 "use client"
+import CommentItem from '@/components/CommentItem';
 import EditngCommentModal from '@/components/EditngCommentModal';
 import ReplyModal from '@/components/ReplyModal';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,7 @@ const PostDetails = () => {
   const [updateCommentText, setUpdateCommentText] = useState<string>("");
   const [isReplying, setIsReplying] = useState("");
   const [replyText, setReplyText] = useState("");
+  const [viewCommentReplies, setViewCommentReplies] = useState<string[]>([]);
 
 
   const { user } = useAuth();
@@ -73,7 +75,10 @@ const PostDetails = () => {
           name: user!.name,
           profile: null
         },
-        replies: []
+        replies: [],
+        _count :{
+          replies : 0
+        }
       };
 
       queryClient.setQueryData<Post>(["post-details", postId], (old) => {
@@ -86,6 +91,9 @@ const PostDetails = () => {
           ] : addReply(old.comments, variables.parentId, newComment)
         }
       });
+
+      setIsReplying("");
+
       setCommentText('');
     },
     onError: () => {
@@ -187,140 +195,74 @@ const PostDetails = () => {
   }
 
 
-
   return (
-    <div className='space-y-8 flex flex-col' >
-      <span> page : {postId}</span>
+    <div className="flex flex-col space-y-8">
+      <span>page : {postId}</span>
+
       <div>
-        <div className='flex flex-col'>
-          <span>{data.user.name}</span><span>{data.address}</span>
-
-
+        <div className="flex flex-col">
+          <span>{data.user.name}</span>
+          <span>{data.address}</span>
         </div>
+
         <span>{data.caption}</span>
-        <div className='flex flex-row'>
-          {
-            data.images.map((img) => (
-              <div key={img.id}>
-                <img src={img.url} />
-              </div>
-            ))
-          }
+
+        <div className="flex flex-row">
+          {data.images.map((img) => (
+            <img key={img.id} src={img.url} />
+          ))}
         </div>
+
         <div>
-          <span>comments</span>
-          <div className='flex flex-col space-y-4'>
-            {
-              data.comments.map((comment) => (
-                <div className='flex flex-col bg-green-300' key={comment.id}>
-                  <span>{comment.user.name}</span>
-                  {
-                    comment.id === isEditingComment ?
-                      <EditngCommentModal
-                        updateCommentText={updateCommentText}
-                        commentId={comment.id}
-                        setUpdateCommentText={setUpdateCommentText}
-                        setIsEditingCommenting={setIsEditingCommenting}
-                        handleUpdateComment={handleUpdateComment}
-                      />
-                      :
-                      <span>{comment.text}</span>
+          <span>Comments</span>
 
-                  }
-                  <div className='flex flex-row space-x-4'>
-                    {
-                      comment.userId === user?.id &&
-                      <button
-                        className='flex-row flex'
-                        onClick={() => {
-                          setUpdateCommentText(comment.text)
-                          setIsEditingCommenting(comment.id)
-                        }}
-                      >
-                        <Edit />
-                        Edit
-                      </button>
-                    }
-                    {
-                      comment.userId === user?.id &&
-                      <button
-                        className='flex-row flex'
-                        onClick={() => {
-                          handleDeleteCommentMutation.mutate({
-                            commentId: comment.id
-                          })
-                        }}
-                      >
-                        <Trash />
-                        Delete
-                      </button>
-                    }
-
-                    {
-                      comment.userId === user?.id &&
-                      <button
-                        className='flex-row flex'
-                        onClick={() => {
-                          setIsReplying(comment.id)
-                        }}
-                      >
-                        <Forward />
-                        Reply
-                      </button>
-                    }
-
-
-                  </div>
-                  {
-                    
-                  }
-                  {
-                    isReplying === comment.id &&
-                    <ReplyModal
-                      commentId={comment.id}
-                      handleAddComment={handleAddComment}
-                      replyText={replyText}
-                      setIsReplying={setIsReplying}
-                      setReplyText={setReplyText}
-                    />
-
-                  }
-
-
-                </div>
-              ))
-            }
+          <div className="mt-4 flex flex-col space-y-4">
+            {data.comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                user={user}
+                isEditingComment={isEditingComment}
+                updateCommentText={updateCommentText}
+                setUpdateCommentText={setUpdateCommentText}
+                setIsEditingCommenting={setIsEditingCommenting}
+                handleUpdateComment={handleUpdateComment}
+                handleDeleteCommentMutation={handleDeleteCommentMutation}
+                isReplying={isReplying}
+                setIsReplying={setIsReplying}
+                replyText={replyText}
+                setReplyText={setReplyText}
+                handleAddComment={handleAddComment}
+                viewCommentReplies={viewCommentReplies}
+                setViewCommentReplies={setViewCommentReplies}
+              />
+            ))}
           </div>
         </div>
       </div>
+
       <div>
         <input
-          onChange={(e) => {
-            setCommentText(e.target.value)
-          }}
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
         />
+
         <button
+          className="bg-gray-400"
           disabled={handleAddCommentMutation.isPending}
-          onClick={() => {
+          onClick={() =>
             handleAddCommentMutation.mutate({
-              parentId: null
+              parentId: null,
             })
-          }}
-          className='bg-gray-400'>
-          {
-            <span>
-              {
-                handleAddCommentMutation.isPending ? 'Commenting...' :
-                  'Comment'
-              }
-            </span>
           }
+        >
+          {handleAddCommentMutation.isPending
+            ? "Commenting..."
+            : "Comment"}
         </button>
       </div>
     </div>
-
-
-  )
+  );
 }
 
 export default PostDetails

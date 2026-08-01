@@ -1,17 +1,17 @@
 
 export interface CreatePost {
-    caption: string,
-    image: string[],
-    category: "General" |
-    "Nature" |
-    "Food" |
-    "Traffic" |
-    "Alert" |
-    "LostFound",
-    placeName: string,
-    latitude: number
-    longitude: number
-    address : string
+  caption: string,
+  image: string[],
+  category: "General" |
+  "Nature" |
+  "Food" |
+  "Traffic" |
+  "Alert" |
+  "LostFound",
+  placeName: string,
+  latitude: number
+  longitude: number
+  address: string
 }
 
 export interface Post {
@@ -29,8 +29,8 @@ export interface Post {
 
   images: Image[];
   votes: Vote[]
-  comments : Comment[]
-  
+  comments: Comment[]
+
 
   createdAt: string;
   updatedAt: string;
@@ -64,11 +64,14 @@ interface User {
 }
 
 export interface Comment {
-  id : string,
-  text : string,
+  id: string,
+  text: string,
   parentId: string | null
   postId: string;
-  userId : string,
-  user : User
-  replies : Comment[]
+  userId: string,
+  user: User
+  replies: Comment[]
+  _count: {
+    replies: number
+  }
 }

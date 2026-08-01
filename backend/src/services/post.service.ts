@@ -70,12 +70,20 @@ export const postDetailService = async (postId: string) => {
                 }
             },
             comments: {
+                where: {
+                    parentId: null
+                },
                 include: {
                     user: {
                         select: {
                             name: true,
                             id: true,
 
+                        }
+                    },
+                    _count: {
+                        select: {
+                            replies: true
                         }
                     },
                     replies: {
