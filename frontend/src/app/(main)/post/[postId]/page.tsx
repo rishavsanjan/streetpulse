@@ -1,12 +1,9 @@
 "use client"
 import CommentItem from '@/components/CommentItem';
-import EditngCommentModal from '@/components/EditngCommentModal';
-import ReplyModal from '@/components/ReplyModal';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
 import { Comment, Post } from '@/types/post';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Forward, Trash } from 'lucide-react';
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner';
@@ -34,7 +31,7 @@ const PostDetails = () => {
     }
   })
 
-  function addReply(comments: Comment[], parentId: string,
+  function addNewReply(comments: Comment[], parentId: string,
     newComment: Comment
   ): Comment[] {
 
@@ -47,7 +44,65 @@ const PostDetails = () => {
 
       return {
         ...comment,
-        replies: addReply(comment.replies, parentId, newComment)
+        replies: addNewReply(comment.replies, parentId, newComment)
+      }
+    })
+  }
+
+
+  function addFetchedReply(comments: Comment[], parentId: string, replies: Comment[]): Comment[] {
+    return comments.map((comment) => {
+      if (comment.id === parentId) {
+        return {
+          ...comment, replies: [...comment.replies, ...replies]
+        }
+      }
+
+      return {
+        ...comment,
+        replies: addFetchedReply(comment.replies, parentId, replies)
+      }
+    })
+  }
+
+  function deleteComment(
+    comments: Comment[],
+    commentId: string,
+    parentId: string | null
+  ): Comment[] {
+    return comments
+      .filter((comment) => comment.id !== commentId)
+      .map((comment) => ({
+        ...comment,
+        _count:
+          comment.id === parentId
+            ? {
+              ...comment._count,
+              replies: comment._count.replies - 1,
+            }
+            : comment._count,
+        replies: deleteComment(
+          comment.replies,
+          commentId,
+          parentId
+        ),
+      }));
+  }
+
+  function removeReplyCount(comments: Comment[], commentId: string): Comment[] {
+    return comments.map((comment) => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          _count: {
+            replies: comment._count.replies - 1
+          }
+        }
+      }
+
+      return {
+        ...comment,
+        replies: removeReplyCount(comment.replies, commentId)
       }
     })
   }
@@ -57,7 +112,7 @@ const PostDetails = () => {
     mutationFn: async ({ parentId }: { parentId: string | null }) => {
       const res = await api.post(`/comment/${postId}`, {
         parentId,
-        text: commentText
+        text: parentId ? replyText : commentText
       });
 
       return res.data
@@ -68,7 +123,7 @@ const PostDetails = () => {
         id: crypto.randomUUID(),
         postId,
         userId: user!.id,
-        text: commentText,
+        text: variables.parentId ? replyText : commentText,
         parentId: variables.parentId,
         user: {
           id: user!.id,
@@ -76,8 +131,8 @@ const PostDetails = () => {
           profile: null
         },
         replies: [],
-        _count :{
-          replies : 0
+        _count: {
+          replies: 0
         }
       };
 
@@ -88,10 +143,17 @@ const PostDetails = () => {
           ...old,
           comments: variables.parentId === null ? [
             ...old.comments, newComment
-          ] : addReply(old.comments, variables.parentId, newComment)
+          ] : addNewReply(old.comments, variables.parentId, newComment)
         }
       });
+      if (variables.parentId !== null) {
+        setViewCommentReplies((prev) =>
+          variables.parentId !== null
+            ? [...prev, variables.parentId]
+            : prev
+        );
 
+      }
       setIsReplying("");
 
       setCommentText('');
@@ -103,7 +165,7 @@ const PostDetails = () => {
 
   const handleDeleteCommentMutation = useMutation({
     mutationKey: ['comment-delete', postId],
-    mutationFn: async ({ commentId }: { commentId: string }) => {
+    mutationFn: async ({ commentId , parentId}: { commentId: string, parentId : string | null}) => {
       const res = await api.delete(`/comment/${commentId}`);
 
       return res.data
@@ -116,11 +178,12 @@ const PostDetails = () => {
 
         return {
           ...old,
-          comments: [
-            ...old.comments.filter((comment) => comment.id !== variables.commentId)
-          ]
+          comments: deleteComment(old.comments, variables.commentId, variables.parentId)
+
         }
+
       });
+
       toast.success("Comment deleted successfully")
     },
     onError: () => {
@@ -168,6 +231,28 @@ const PostDetails = () => {
     }
   });
 
+  const handleGetRepliesMutation = useMutation<Comment[], Error, { parentId: string }>({
+    mutationKey: ['replies'],
+    mutationFn: async ({ parentId }: { parentId: string }) => {
+      const res = await api.get(`/comment/replies/${parentId}`);
+      console.log(res.data)
+      return res.data.data as Comment[]
+    },
+    onSuccess: (replies, variables) => {
+      queryClient.setQueryData<Post>(["post-details", postId], (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          comments: addFetchedReply(old.comments, variables.parentId, replies)
+        }
+      });
+
+      setViewCommentReplies(prev => ([...prev, variables.parentId]))
+
+    }
+  })
+
   const handleAddComment = (parentId: string | null) => {
     handleAddCommentMutation.mutate({
       parentId: parentId
@@ -177,6 +262,15 @@ const PostDetails = () => {
   const handleUpdateComment = (commentId: string) => {
     hanldleUpdateCommentMutation.mutate({
       commentId: commentId
+    })
+  }
+
+
+
+  const handleGetReplies = (parentId: string) => {
+
+    handleGetRepliesMutation.mutate({
+      parentId
     })
   }
 
@@ -235,6 +329,7 @@ const PostDetails = () => {
                 handleAddComment={handleAddComment}
                 viewCommentReplies={viewCommentReplies}
                 setViewCommentReplies={setViewCommentReplies}
+                handleGetReplies={handleGetReplies}
               />
             ))}
           </div>

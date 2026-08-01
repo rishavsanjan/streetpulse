@@ -31,11 +31,11 @@ export const getCommentService = async (postId: string) => {
         orderBy: {
             createdAt: 'asc'
         },
-        select:{
-            user:{
-                select:{
-                    name:true,
-                    id:true
+        select: {
+            user: {
+                select: {
+                    name: true,
+                    id: true
                 }
             }
         },
@@ -68,5 +68,37 @@ export const deleteCommentService = async (userId: string, commentId: string) =>
     if (comment.userId !== userId) throw new Error("Not authorized to delete this comment");
 
     return prisma.comment.delete({ where: { id: commentId } });
+}
+
+export const getRepliesService = async ( parentId: string) => {
+    const comment = await prisma.comment.findMany({
+        where: {
+            parentId
+        },
+        orderBy: {
+            createdAt: 'asc'
+        },
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    id: true,
+
+                }
+            },
+            _count: {
+                select: {
+                    replies: true
+                }
+            },
+            replies: {
+                take: 0
+            }
+        },
+        skip: 0,
+        take: 20
+    })
+
+    return comment;
 }
 

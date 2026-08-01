@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { commentSchema } from "../validators/comment.validator.js";
-import { addCommentService, deleteCommentService, getCommentService, updateCommentService } from "../services/comment.service.js";
+import { addCommentService, deleteCommentService, getCommentService, getRepliesService, updateCommentService } from "../services/comment.service.js";
 
 
 
@@ -87,6 +87,27 @@ export const deleteComment = async (req: Request<CommentIdParams>, res: Response
         return res.status(401).json({
             success: false,
             message: error instanceof Error ? error.message : "Unable to delete comment",
+        });
+    }
+}
+
+type ParentIdParams = {
+    id : string
+}
+
+export const getReplies = async (req: Request<ParentIdParams>, res: Response) => {
+    
+    try {
+        const comment = await getRepliesService( req.params.id);
+        return res.status(200).json({
+            success: true,
+            message: "Replies fetched successfully",
+            data: comment,
+        });
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: error instanceof Error ? error.message : "Unable to fetch comments",
         });
     }
 }

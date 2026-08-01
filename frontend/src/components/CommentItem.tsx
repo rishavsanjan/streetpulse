@@ -22,6 +22,7 @@ type Props = {
   replyText: string;
   setReplyText: React.Dispatch<React.SetStateAction<string>>;
   handleAddComment: (parentId: string | null) => void;
+  handleGetReplies: (parentId: string) => void;
 
   viewCommentReplies: string[];
   setViewCommentReplies: React.Dispatch<
@@ -45,6 +46,7 @@ export default function CommentItem({
   handleAddComment,
   viewCommentReplies,
   setViewCommentReplies,
+  handleGetReplies
 }: Props) {
   const expanded = viewCommentReplies.includes(comment.id);
 
@@ -80,6 +82,7 @@ export default function CommentItem({
               onClick={() =>
                 handleDeleteCommentMutation.mutate({
                   commentId: comment.id,
+                  parentId: comment.parentId
                 })
               }
             >
@@ -94,12 +97,22 @@ export default function CommentItem({
 
         {comment._count.replies > 0 && (
           <button
-            onClick={() =>
-              setViewCommentReplies((prev) =>
-                prev.includes(comment.id)
-                  ? prev.filter((id) => id !== comment.id)
-                  : [...prev, comment.id]
-              )
+            onClick={() => {
+              if (expanded) {
+                setViewCommentReplies(prev => prev.filter((id) => id !== comment.id))
+                return;
+              }
+
+              if (comment.replies.length > 0) {
+                setViewCommentReplies((prev) => [...prev, comment.id]);
+                return;
+
+              }
+              handleGetReplies(comment.id)
+
+
+            }
+
             }
           >
             {expanded
@@ -139,6 +152,7 @@ export default function CommentItem({
               handleAddComment={handleAddComment}
               viewCommentReplies={viewCommentReplies}
               setViewCommentReplies={setViewCommentReplies}
+              handleGetReplies={handleGetReplies}
             />
           ))}
         </div>
