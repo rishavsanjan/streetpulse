@@ -5,7 +5,8 @@ import { updateProfileSchema } from "../validators/profile.validator.js";
 export const profile = async (req: Request, res: Response) => {
 
     try {
-            const user = await userProfile(req.user);
+        console.log("i am here")
+        const user = await userProfile(req.user);
 
         return res.status(200).json({
             success: true,
@@ -46,7 +47,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 }
 
 type UserParams = {
-  id: string;
+    id: string;
 };
 
 export const getUserProfile = async (req: Request<UserParams>, res: Response) => {

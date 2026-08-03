@@ -13,8 +13,16 @@ export const userProfile = async (data: {
             id: true,
             name: true,
             email: true,
-            profile: true
-        }
+            profile: true,
+            _count:{
+                select:{
+                    followers:true,
+                    following:true,
+                    posts:true
+                }
+            }       
+        },
+        
     })
 
     if (!user) {

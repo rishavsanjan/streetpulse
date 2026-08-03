@@ -15,4 +15,9 @@ export interface User {
   name: string;
   email: string;
   profile: Profile | null;
+  _count: {
+    followers: number,
+    following: number,
+    posts: number
+  }
 }

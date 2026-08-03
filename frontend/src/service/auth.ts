@@ -30,7 +30,6 @@ export const login = async (data: LoginInput): Promise<LoginResponse> => {
 }
 
 export const getCurrentUser = async (): Promise<User> => {
-    console.log(" i m running")
     const user = await api.get("/profile/me");
 
     return user.data.user.user;
