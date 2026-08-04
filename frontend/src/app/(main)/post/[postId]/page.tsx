@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner';
+import { MessageCircle, Send } from 'lucide-react';
 
 const PostDetails = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -282,33 +283,47 @@ const PostDetails = () => {
 
   if (getPostDetails.isPending) {
     return (
-      <div>
-        loading..
+      <div className='flex h-[60vh] items-center justify-center'>
+        <span className='h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600' />
       </div>
     )
   }
 
 
   return (
-    <div className="flex flex-col space-y-8">
-      <span>page : {postId}</span>
+    <div className="mx-auto flex w-full  flex-col space-y-6 px-4 pb-28 pt-6">
+      <span className='text-xs font-medium uppercase tracking-wide text-slate-400'>page : {postId}</span>
 
-      <div>
-        <div className="flex flex-col">
-          <span>{data.user.name}</span>
-          <span>{data.address}</span>
+      <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm'>
+        <div className="flex items-center gap-3 px-4 pt-4">
+          <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600'>
+            {data.user.name?.[0]?.toUpperCase()}
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className='text-sm font-semibold text-slate-900'>{data.user.name}</span>
+            <span className='text-xs text-slate-400'>{data.address}</span>
+          </div>
         </div>
 
-        <span>{data.caption}</span>
+        {data.caption && (
+          <span className='block px-4 pt-3 text-sm leading-relaxed text-slate-700'>{data.caption}</span>
+        )}
 
-        <div className="flex flex-row">
-          {data.images.map((img) => (
-            <img key={img.id} src={img.url} />
-          ))}
-        </div>
+        {data.images.length > 0 && (
+          <div className="mt-3 flex flex-row gap-0.5 ">
+            {data.images.map((img) => (
+              <div key={img.id} className=' shrink-0'>
+                <img src={img.url} className='h-full w-full object-cover' />
+              </div>
+            ))}
+          </div>
+        )}
 
-        <div>
-          <span>Comments</span>
+        <div className='px-4 pb-4 pt-4'>
+          <div className='flex items-center gap-1.5 text-slate-500'>
+            <MessageCircle size={16} />
+            <span className='text-sm font-medium text-slate-600'>Comments</span>
+          </div>
 
           <div className="mt-4 flex flex-col space-y-4">
             {data.comments.map((comment) => (
@@ -336,25 +351,34 @@ const PostDetails = () => {
         </div>
       </div>
 
-      <div>
-        <input
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-        />
+      <div className='fixed inset-x-0 bottom-0 z-20 border-t border-slate-100 bg-white/95 px-4 py-3 backdrop-blur-sm'>
+        <div className='mx-auto flex w-full max-w-xl items-center gap-2'>
+          <input
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder='Add a comment...'
+            className='flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+          />
 
-        <button
-          className="bg-gray-400"
-          disabled={handleAddCommentMutation.isPending}
-          onClick={() =>
-            handleAddCommentMutation.mutate({
-              parentId: null,
-            })
-          }
-        >
-          {handleAddCommentMutation.isPending
-            ? "Commenting..."
-            : "Comment"}
-        </button>
+          <button
+            className="flex items-center gap-1.5 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+            disabled={handleAddCommentMutation.isPending}
+            onClick={() =>
+              handleAddCommentMutation.mutate({
+                parentId: null,
+              })
+            }
+          >
+            {handleAddCommentMutation.isPending
+              ? "Commenting..."
+              : (
+                <>
+                  <span className='hidden sm:inline'>Comment</span>
+                  <Send size={16} className='sm:hidden' />
+                </>
+              )}
+          </button>
+        </div>
       </div>
     </div>
   );
