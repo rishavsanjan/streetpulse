@@ -3,6 +3,7 @@
 import ReactionModel from '@/components/ReactionModel';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
+import { handleReaction } from '@/lib/post';
 import { queryClient } from '@/lib/queryClient';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame, Heart, MessageCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
@@ -68,6 +69,15 @@ type ReactionVariables = {
 };
 
 
+const CATEGORY_STYLES: Record<Post['category'], string> = {
+  General: 'bg-slate-100 text-slate-600',
+  Nature: 'bg-emerald-50 text-emerald-600',
+  Food: 'bg-orange-50 text-orange-600',
+  Traffic: 'bg-amber-50 text-amber-700',
+  Alert: 'bg-red-50 text-red-600',
+  LostFound: 'bg-indigo-50 text-indigo-600',
+};
+
 const Page = () => {
   const { user, loading } = useAuth();
   const [showReactionModel, setShowReactionModel] = useState("");
@@ -88,17 +98,7 @@ const Page = () => {
 
   const handleReactionMutation = useMutation({
     mutationKey: ['reaction'],
-    mutationFn: async ({ reactionAction, reactionType, postId }: ReactionVariables) => {
-      if (reactionAction === "add") {
-        const res = await api.post(`/reaction/${postId}`, {
-          reaction: reactionType
-        })
-
-
-      } else {
-        const res = await api.delete(`/reaction/${postId}`)
-      }
-    },
+    mutationFn: handleReaction,
     onSuccess: (_, variables) => {
       queryClient.setQueryData<Post[]>(["feed"], (old) => {
         if (!old) return old;
@@ -173,133 +173,158 @@ const Page = () => {
 
   console.log(data)
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return (
+    <div className='flex h-[60vh] items-center justify-center'>
+      <span className='h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600' />
+    </div>
+  );
 
 
 
 
   return (
-    <div className='flex flex-col space-y-8'>
-      <div>
-        <h1>Feed</h1>
-        <p>{user?.name}</p>
-        <p>{user?.email}</p>
-      </div>
-      <div className='pb-20'>
+    <div className='mx-auto flex w-full  flex-col space-y-6 px-4 pt-6'>
+      
+
+      <div className='flex flex-col gap-4 pb-20'>
         {
           data.map((post) => (
-            <div key={post.id} className='bg-red-500'>
-              <div className='flex flex-col'>
-                <span>{post.user.name}</span><span>{post.address}</span>
+            <div key={post.id} className='overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm'>
 
-
-              </div>
-              <Link href={`/post/${post.id}`}>
-                <span>{post.caption}</span>
-                <div className='flex flex-row'>
-                  {
-                    post.images.map((img) => (
-                      <div key={img.id}>
-                        <img src={img.url} />
-                      </div>
-                    ))
-                  }
+              {/* Header */}
+              <div className='flex items-center justify-between px-4 pt-4'>
+                <div className='flex items-center gap-3'>
+                  <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600'>
+                    {post.user.name?.[0]?.toUpperCase()}
+                  </div>
+                  <div className='flex flex-col leading-tight'>
+                    <span className='text-sm font-semibold text-slate-900'>{post.user.name}</span>
+                    <span className='text-xs text-slate-400'>{post.address}</span>
+                  </div>
                 </div>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${CATEGORY_STYLES[post.category]}`}>
+                  {post.category}
+                </span>
+              </div>
+
+              {/* Body */}
+              <Link href={`/post/${post.id}`} className=''>
+                {post.caption && (
+                  <p className='px-4 pt-3 text-sm leading-relaxed text-slate-700'>{post.caption}</p>
+                )}
+                {post.images.length > 0 && (
+                  <div className='mt-3 flex flex-row space-x-4'>
+                    {
+                      post.images.map((img) => (
+                        <div key={img.id} className=''>
+                          <img src={img.url} className='h-96 w-96 object-cover' />
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </Link>
 
-              <div
-                onMouseEnter={() => {
-                  setShowReactionModel(post.id)
-                }}
-                onMouseLeave={() => {
-                  setShowReactionModel("");
-                }}
-                className='flex flex-col'
+              {/* Actions */}
+              <div className='flex items-center justify-between px-4 py-3'>
+                <div
+                  onMouseEnter={() => {
+                    setShowReactionModel(post.id)
+                  }}
+                  onMouseLeave={() => {
+                    setShowReactionModel("");
+                  }}
+                  className='relative flex flex-col'
 
-              >
-                <div>
-                  {
-                    showReactionModel === post.id &&
-                    <ReactionModel reaction={post.votes[0]?.reaction} postId={post.id} handleAddReaction={handleAddReaction} disabledButton={handleReactionMutation.isPending} />
-                  }
-                </div>
-                <div className='flex flex-row'>
-                  {
+                >
+                  <div className='absolute  left-0'>
+                    {
+                      showReactionModel === post.id &&
+                      <ReactionModel reaction={post.votes[0]?.reaction} postId={post.id} handleAddReaction={handleAddReaction} disabledButton={handleReactionMutation.isPending} />
+                    }
+                  </div>
+                  <div className='flex flex-row items-center gap-2'>
+                    {
 
-                    post.votes[0]?.reaction === 'Like' ?
-                      <button
-                        disabled={handleReactionMutation.isPending}
-                        onClick={() => {
-                          handleAddReaction({
-                            reactionAction: 'remove',
-                            reactionType: 'Like',
-                            postId: post.id
-                          })
-                        }}>
-                        <ThumbsUp color='blue' fill='blue' />
-                      </button>
-
-                      :
-
-                      post.votes[0]?.reaction === 'Love' ?
+                      post.votes[0]?.reaction === 'Like' ?
                         <button
                           disabled={handleReactionMutation.isPending}
+                          className='flex items-center justify-center rounded-full p-1.5 transition hover:bg-slate-100 disabled:opacity-50'
                           onClick={() => {
                             handleAddReaction({
                               reactionAction: 'remove',
-                              reactionType: 'Love',
+                              reactionType: 'Like',
                               postId: post.id
                             })
                           }}>
-                          <Heart color='red' fill='red' />
+                          <ThumbsUp size={20} color='#4f46e5' fill='#4f46e5' />
                         </button>
 
                         :
 
-
-                        post.votes[0]?.reaction === 'Fire' ?
+                        post.votes[0]?.reaction === 'Love' ?
                           <button
                             disabled={handleReactionMutation.isPending}
+                            className='flex items-center justify-center rounded-full p-1.5 transition hover:bg-slate-100 disabled:opacity-50'
                             onClick={() => {
                               handleAddReaction({
                                 reactionAction: 'remove',
-                                reactionType: 'Fire',
+                                reactionType: 'Love',
                                 postId: post.id
                               })
                             }}>
-                            <Flame color='yellow' fill='yellow' />
+                            <Heart size={20} color='#e11d48' fill='#e11d48' />
                           </button>
 
                           :
 
-                          <button
-                            disabled={handleReactionMutation.isPending}
 
-                            onClick={() => {
-                              handleAddReaction({
-                                reactionAction: 'add',
-                                reactionType: 'Like',
-                                postId: post.id
-                              })
-                            }}
-                          >
+                          post.votes[0]?.reaction === 'Fire' ?
+                            <button
+                              disabled={handleReactionMutation.isPending}
+                              className='flex items-center justify-center rounded-full p-1.5 transition hover:bg-slate-100 disabled:opacity-50'
+                              onClick={() => {
+                                handleAddReaction({
+                                  reactionAction: 'remove',
+                                  reactionType: 'Fire',
+                                  postId: post.id
+                                })
+                              }}>
+                              <Flame size={20} color='#f59e0b' fill='#f59e0b' />
+                            </button>
 
-                            <ThumbsUp />
-                          </button>
+                            :
 
-                  }
-                  <div>
-                    {post._count.votes}
+                            <button
+                              disabled={handleReactionMutation.isPending}
+                              className='flex items-center justify-center rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50'
+
+                              onClick={() => {
+                                handleAddReaction({
+                                  reactionAction: 'add',
+                                  reactionType: 'Like',
+                                  postId: post.id
+                                })
+                              }}
+                            >
+
+                              <ThumbsUp size={20} />
+                            </button>
+
+                    }
+                    <span className='text-sm text-slate-500'>
+                      {post._count.votes}
+                    </span>
                   </div>
+
+
+
+
                 </div>
-
-
-
-
-              </div>
-              <div className='flex flex-row'>
-                <MessageCircle />
-                {post._count.comments}
+                <div className='flex flex-row items-center gap-1.5 text-slate-500'>
+                  <MessageCircle size={20} />
+                  <span className='text-sm'>{post._count.comments}</span>
+                </div>
               </div>
             </div>
 

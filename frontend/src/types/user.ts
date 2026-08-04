@@ -1,3 +1,5 @@
+import { Post } from "./post";
+
 export interface Profile {
   id: string;
   bio: string | null;
@@ -20,4 +22,17 @@ export interface User {
     following: number,
     posts: number
   }
+}
+
+export interface PersonalProfile {
+  id: string;
+  name: string;
+  email: string;
+  profile: Profile | null;
+  _count: {
+    followers: number,
+    following: number,
+    posts: number
+  },
+  posts : Post[]
 }

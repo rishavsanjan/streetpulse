@@ -1,7 +1,7 @@
 "use client"
 import UpdateProfileModel from '@/components/UpdateProfileModel';
 import api from '@/lib/axios';
-import { User } from '@/types/user';
+import { PersonalProfile, User } from '@/types/user';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -11,13 +11,13 @@ const Profile = () => {
     const userData = useQuery({
         queryKey: ['profile'],
         queryFn: async () => {
-            const res = await api.get("/profile/me");
+            const res = await api.get("/profile");
             console.log(res.data)
             return res.data.user.user;
         }
     })
 
-    const user: User = userData.data ?? {};
+    const user: PersonalProfile = userData.data ?? {};
 
 
     if (!user || userData.isPending) {
@@ -93,13 +93,24 @@ const Profile = () => {
             {
                 profileUpdateModel &&
                 <div className=''>
-                    
+
                     <UpdateProfileModel
                         user={user}
                         setCloseModel={setProfileUpdateModel}
                     />
                 </div>
             }
+
+            <div>
+                {
+                    user.posts.map((post) => (
+                        <div key={post.id}>
+                            
+                        </div>
+                    ))
+                }
+            </div>
+
 
 
 

@@ -23,7 +23,7 @@ interface Props {
 
 const ReactionModel: React.FC<Props> = ({ reaction, postId, handleAddReaction, disabledButton }) => {
     return (
-        <div className='flex flex-row'>
+        <div className='flex flex-row bg-white p-2 rounded-2xl space-x-4 z-1000'>
             {
 
                 reaction === 'Like' ?

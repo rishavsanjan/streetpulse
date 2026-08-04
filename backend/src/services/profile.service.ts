@@ -13,16 +13,9 @@ export const userProfile = async (data: {
             id: true,
             name: true,
             email: true,
-            profile: true,
-            _count:{
-                select:{
-                    followers:true,
-                    following:true,
-                    posts:true
-                }
-            }       
+            profile: true
         },
-        
+
     })
 
     if (!user) {
@@ -99,4 +92,54 @@ export const getUserProfileService = async (
     }
 
     return user;
+}
+
+export const getPersonalProfileService = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profile: true,
+            _count: {
+                select: {
+                    followers: true,
+                    following: true,
+                    posts: true
+                }
+            },
+            posts: {
+                include: {
+                    _count: {
+                        select: {
+                            votes: true,
+                            comments: true
+                        }
+                    }
+                }
+            },
+            events: {
+                include: {
+                    _count: {
+                        select: {
+                            interests: true,
+                            comments: true
+                        }
+                    }
+                }
+            }
+        },
+
+    })
+
+    if (!user) {
+        throw new Error("User does not exist")
+    }
+
+    return {
+        user: user
+    }
 }
