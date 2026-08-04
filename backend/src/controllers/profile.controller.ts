@@ -22,7 +22,6 @@ export const profile = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
     const result = updateProfileSchema.safeParse(req.body);
-
     if (!result.success) {
         return res.status(400).json({
             success: false,

@@ -41,6 +41,7 @@ const Profile = () => {
                             />
                             :
                             <img
+                                className='w-48 h-48  rounded-full'
                                 alt='profile-image'
                                 src={user.profile?.avatar ?? ""}
                             />
@@ -49,6 +50,11 @@ const Profile = () => {
                     }
 
                     <span>{user.name}</span>
+                </div>
+                <div>
+                    <span>{user.profile?.bio ?? ""}</span>
+                    <span>{user.profile?.city ?? ""}</span>
+                    <span>{user.profile?.country ?? ""}</span>
                 </div>
 
                 <div className='flex flex-row'>
@@ -86,7 +92,7 @@ const Profile = () => {
             </div>
             {
                 profileUpdateModel &&
-                <div className='absolute w-full '>
+                <div className=''>
                     
                     <UpdateProfileModel
                         user={user}

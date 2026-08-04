@@ -51,6 +51,7 @@ export const updateUserProfile = async (
         throw new Error("User does not exist")
     }
 
+
     return await prisma.profile.upsert({
         where: {
             userId: userId

@@ -2,8 +2,7 @@ import api from '@/lib/axios';
 import { uploadImage } from '@/lib/cloudinary';
 import { Profile, User } from '@/types/user'
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { error } from 'console';
-import { Cross } from 'lucide-react';
+import { MapPin, User as UserIcon, X } from 'lucide-react';
 import React, { SetStateAction, useEffect, useState } from 'react'
 
 interface Props {
@@ -136,7 +135,7 @@ const UpdateProfileModel: React.FC<Props> = ({ user, setCloseModel }) => {
 
 
             const res = await api.patch(`/profile`, {
-                data
+                ...data
             })
         },
         onSuccess: async (_, variables) => {
@@ -179,135 +178,169 @@ const UpdateProfileModel: React.FC<Props> = ({ user, setCloseModel }) => {
             onClick={() => {
                 setCloseModel(false)
             }}
-            className='bg-black/50 h-screen  flex flex-col  justify-center'>
-            <div onClick={(e) => e.stopPropagation()}>
-                <div>
-
-                    <span>Update your profile</span>
+            className='fixed inset-0 z-50 flex items-center  bg-slate-950/60 backdrop-blur-sm px-4 py-8'
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                className='w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-slate-900/5'
+            >
+                {/* Header */}
+                <div className='flex items-center justify-between border-b border-slate-100 px-6 py-4'>
+                    <span className='text-lg font-semibold text-slate-900'>Update your profile</span>
                     <button
                         onClick={() => {
                             setCloseModel(false)
                         }}
+                        aria-label="Close"
+                        className='rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600'
                     >
-                        <Cross />
+                        <X size={20} />
                     </button>
                 </div>
-                <div>
-                    {
-                        formData?.avatar ?
-                            <img
-                                className='w-48 h-48 rounded-full'
-                                src={formData.avatar}
-                            />
-                            :
+
+                <div className='space-y-5 px-6 py-6'>
+                    {/* Avatar */}
+                    <div className='flex flex-col items-center gap-3'>
+                        {
+                            formData?.avatar ?
+                                <img
+                                    className='h-28 w-28 rounded-full object-cover ring-4 ring-indigo-50'
+                                    src={formData.avatar}
+                                    alt="Profile avatar"
+                                />
+                                :
+                                <label className='flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:border-indigo-400 hover:text-indigo-500'>
+                                    <UserIcon size={26} />
+                                    <span className='text-[11px] font-medium'>Add photo</span>
+                                    <input
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0]
+
+                                            if (!file) return;
+                                            setProfileImage(file)
+                                            setFormData(prev => ({ ...prev, avatar: URL.createObjectURL(file) }))
+                                        }}
+                                        type='file'
+                                        accept='image/*'
+                                        className='hidden'
+                                    />
+                                </label>
+                        }
+                    </div>
+
+                    {/* Name */}
+                    <div className='space-y-1.5'>
+                        <label className='block text-sm font-medium text-slate-700'>Name</label>
+                        <input
+                            value={formData.name}
+                            type="text"
+                            onChange={(e) => {
+                                setFormData(prev => ({ ...prev, name: e.target.value }))
+                            }}
+                            className='w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+                            placeholder="Your name"
+                        />
+                    </div>
+
+                    {/* Bio */}
+                    <div className='space-y-1.5'>
+                        <label className='block text-sm font-medium text-slate-700'>Bio</label>
+                        <input
+                            value={formData.bio}
+                            type="text"
+                            onChange={(e) => {
+                                setFormData(prev => ({ ...prev, bio: e.target.value }))
+                            }}
+                            className='w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+                            placeholder="Tell your neighborhood a bit about yourself"
+                        />
+                    </div>
+
+                    {/* City */}
+                    <div className='relative space-y-1.5'>
+                        <label className='block text-sm font-medium text-slate-700'>City</label>
+                        <div className='relative'>
+                            <MapPin size={16} className='pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400' />
                             <input
+                                value={formData.city}
                                 onChange={(e) => {
-                                    const file = e.target.files?.[0]
+                                    setFormData(prev => ({ ...prev, city: e.target.value }))
 
-                                    if (!file) return;
-                                    setProfileImage(file)
-                                    setFormData(prev => ({ ...prev, avatar: URL.createObjectURL(file) }))
+                                    setSearchCityQuery(e.target.value)
                                 }}
-                                type='file'
-                                accept='imgage/*'
+                                type="text"
+                                placeholder="Search for your city"
+                                className='w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
                             />
-
-
-                    }
-                </div>
-
-                <div>
-                    <span>Name</span>
-                    <input
-                        value={formData.name}
-                        type="text"
-                        onChange={(e) => {
-                            setFormData(prev => ({ ...prev, name: e.target.value }))
-                        }}
-                    />
-                </div>
-                <div>
-                    <span>Bio</span>
-                    <input
-                        value={formData.bio}
-                        type="text"
-                        onChange={(e) => {
-                            setFormData(prev => ({ ...prev, bio: e.target.value }))
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <span>City</span>
-                    <input
-                        value={formData.city}
-                        onChange={(e) => {
-                            setFormData(prev => ({ ...prev, city: e.target.value }))
-
-                            setSearchCityQuery(e.target.value)
-                        }}
-                        type="text"
-                    />
-                    {cities.length > 0 && (
-                        <div className="border rounded bg-white">
-                            {cities.map((city) => (
-                                <button
-                                    key={city.properties.osm_id}
-                                    className="block w-full p-2 text-left hover:bg-gray-100"
-                                    onClick={() => {
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            city: city.properties.city ?? city.properties.name,
-                                            country: city.properties.country ?? "",
-                                        }));
-
-                                        setSearchCityQuery(
-                                            city.properties.city ?? city.properties.name
-                                        );
-
-                                        setCities([]);
-                                    }}
-                                >
-                                    <div>{city.properties.name}</div>
-                                    <div className="text-sm text-gray-500">
-                                        {city.properties.state}, {city.properties.country}
-                                    </div>
-                                </button>
-                            ))}
                         </div>
-                    )}
+                        {cities.length > 0 && (
+                            <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                                {cities.map((city) => (
+                                    <button
+                                        key={city.properties.osm_id}
+                                        className="block w-full px-3 py-2 text-left transition hover:bg-indigo-50"
+                                        onClick={() => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                city: city.properties.city ?? city.properties.name,
+                                                country: city.properties.country ?? "",
+                                            }));
+
+                                            setSearchCityQuery(
+                                                city.properties.city ?? city.properties.name
+                                            );
+
+                                            setCities([]);
+                                            setDebouncedSearchCityQuery("")
+                                            setSearchCityQuery("")
+                                            
+                                        }}
+                                    >
+                                        <div className='text-sm font-medium text-slate-900'>{city.properties.name}</div>
+                                        <div className="text-xs text-slate-500">
+                                            {city.properties.state}{city.properties.state && city.properties.country ? ', ' : ''}{city.properties.country}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Country */}
+                    <div className='space-y-1.5'>
+                        <label className='block text-sm font-medium text-slate-700'>Country</label>
+                        <input
+                            type='text'
+                            value={formData.country}
+                            readOnly
+                            className='w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 outline-none'
+                        />
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                        onClick={() => {
+                            handleUpdateProfileMutation.mutate({
+                                data: formData,
+                            });
+                        }}
+
+                        disabled={handleUpdateProfileMutation.isPending}
+                        className='mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300'
+                    >
+                        {
+                            handleUpdateProfileMutation.isPending ?
+                                <>
+                                    <span className='h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white' />
+                                    Updating...
+                                </>
+                                :
+                                "Update Profile"
+                        }
+
+                    </button>
                 </div>
-                <div>
-                    <span>Country</span>
-                    <input
-                        type='text'
-                        value={formData.country}
-                    />
-                </div>
-
-                <button
-                    onClick={() => {
-                        handleUpdateProfileMutation.mutate({
-                            data: formData,
-                        });
-                    }}
-
-                    disabled={handleUpdateProfileMutation.isPending}
-                >
-                    {
-                        handleUpdateProfileMutation.isPending ?
-                            "Updating..."
-                            :
-
-                            "Update Profile"
-                    }
-
-                </button>
             </div>
-
-
-
-
         </div>
     )
 }
