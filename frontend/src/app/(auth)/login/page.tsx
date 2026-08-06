@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { socket } from "@/lib/socket";
 
 interface FormValues {
     email: string;
@@ -76,6 +77,10 @@ export default function LoginForm() {
         onSuccess: (data) => {
             saveToken(data.token, data.user)
 
+            socket.auth = {
+                token: data.token
+            }
+            socket.connect();
             setValues(({ email: "", password: "" }))
             router.push("/feed/?isLoggedIn=true")
         },

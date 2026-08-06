@@ -8,8 +8,7 @@ let io: Server;
 export const initializeSocket = (server: HttpServer) => {
     io = new Server(server, {
         cors: {
-            origin: process.env.CLIENT_URL,
-            credentials: true
+            origin: "*"
         }
     });
 
@@ -33,7 +32,7 @@ export const initializeSocket = (server: HttpServer) => {
 
             socket.user = decoded;
 
-            next(); 
+            next();
         } catch (err) {
             console.error(err);
             next(new Error("Unauthorized"));

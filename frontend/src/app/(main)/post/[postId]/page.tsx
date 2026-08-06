@@ -90,23 +90,7 @@ const PostDetails = () => {
       }));
   }
 
-  function removeReplyCount(comments: Comment[], commentId: string): Comment[] {
-    return comments.map((comment) => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          _count: {
-            replies: comment._count.replies - 1
-          }
-        }
-      }
 
-      return {
-        ...comment,
-        replies: removeReplyCount(comment.replies, commentId)
-      }
-    })
-  }
 
   const handleAddCommentMutation = useMutation({
     mutationKey: ['comment', postId],
