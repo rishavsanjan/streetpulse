@@ -47,6 +47,10 @@ export const initializeSocket = (server: HttpServer) => {
             `${socket.user!.email} connected (${socket.id})`
         );
 
+        socket.emit("welcome", {
+            message: "Connected successfully",
+        });
+
         socket.on("disconnect", () => {
             console.log(
                 `${socket.user!.email} disconnected`
