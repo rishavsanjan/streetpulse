@@ -1,4 +1,4 @@
-import SiteHeader from "../../../components/header";
+import SiteHeader from "../../../components/Header";
 import RegistrationForm from "../../../components/registerationForm";
 
 export default function RegisterPage() {

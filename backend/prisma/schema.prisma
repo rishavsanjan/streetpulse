@@ -224,12 +224,25 @@ model Notification {
 
   type NotificationType
 
+  targetType NotificationTargetType
+  targetId   String?
+
+  isActive Boolean @default(true)
+
   isSeen Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, actorId, type, targetType, targetId])
   @@index([userId, isSeen])
+}
+
+enum NotificationTargetType {
+  POST
+  EVENT
+  COMMENT
+  USER
 }
 
 enum NotificationType {
@@ -248,7 +261,7 @@ enum NotificationType {
   Mention
 }
 
-model  Vote {
+model Vote {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
