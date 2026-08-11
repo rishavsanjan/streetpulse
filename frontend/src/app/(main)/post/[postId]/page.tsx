@@ -279,33 +279,7 @@ const PostDetails = () => {
 
   return (
     <div className="bg-[#f4fbf4] min-h-screen text-[#161d19]">
-
-      {/* TopNavBar — decorative, not wired to any handler */}
-      <header className="w-full sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between items-center w-full px-6 py-2 max-w-[1280px] mx-auto">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl text-emerald-700 font-bold">StreetPulse</h1>
-            <nav className="hidden md:flex gap-6 items-center">
-              <a className="text-emerald-700 font-bold border-b-2 border-emerald-700 pb-1 text-sm" href="#">Home</a>
-              <a className="text-gray-500 hover:bg-gray-100 transition-colors text-sm px-2 py-1 rounded" href="#">Explore</a>
-              <a className="text-gray-500 hover:bg-gray-100 transition-colors text-sm px-2 py-1 rounded" href="#">Communities</a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center bg-gray-100 px-4 py-2 rounded-full border border-gray-200">
-              <Search size={18} className="text-gray-500" />
-              <input className="bg-transparent border-none focus:ring-0 text-sm w-48 ml-2" placeholder="Search community..." type="text" />
-            </div>
-            <button className="p-2 rounded-full hover:bg-gray-100 transition-all active:scale-95 relative">
-              <Bell size={20} className="text-gray-500" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-            <div className="w-10 h-10 rounded-full border-2 border-emerald-200 bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-600">
-              {user?.name?.[0]?.toUpperCase()}
-            </div>
-          </div>
-        </div>
-      </header>
+      
 
       <main className="max-w-[1280px] mx-auto px-4 md:px-6 py-8 pb-28">
 
