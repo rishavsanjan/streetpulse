@@ -3,7 +3,7 @@ import { getNotificationsController, markNotificationsAsSeenController } from ".
 import { authMiddleware } from "../middleware/middleware.js";
 
 const router = Router();
-router.get("/notifications", authMiddleware, getNotificationsController);
+router.get("/", authMiddleware, getNotificationsController);
 router.patch("/notifications/seen", authMiddleware, markNotificationsAsSeenController);
 
 export default router

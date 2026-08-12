@@ -7,13 +7,29 @@ export const getNotifications = async (userId: string) => {
         where: {
             userId
         },
+
         orderBy: { createdAt: "desc" },
+        include: {
+            actor: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: {
+                        select: {
+                            avatar: true
+                        }
+                    }
+                }
+            }
+        },
+        take: 10,
+
     })
 }
 
 export const createNotificationService = async (userId: string, data: NotificationSchema) => {
     if (userId === data.userId) {
-        return; 
+        return;
     }
     const notification = await prisma.notification.create({
         data: {

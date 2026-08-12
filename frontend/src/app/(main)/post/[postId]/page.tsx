@@ -298,35 +298,7 @@ const PostDetails = () => {
 
           {/* Main content */}
           <div className="lg:col-span-8 flex flex-col gap-8">
-
-            {/* Hero — uses real post image/address when available, otherwise skipped */}
-            {data.images && data.images.length > 0 && (
-              <section className="relative rounded-3xl overflow-hidden shadow-md">
-                <div
-                  className="w-full h-[320px] md:h-[420px] bg-cover bg-center"
-                  style={{ backgroundImage: `url('${data.images[0].url}')` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6 w-full">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
-                      <Star size={12} fill="white" />
-                      Featured Post
-                    </span>
-                  </div>
-                  {data.caption && (
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-1 drop-shadow-md">{data.caption}</h2>
-                  )}
-                  {data.address && (
-                    <p className="text-white/90 flex items-center gap-1.5 text-base">
-                      <MapPin size={18} />
-                      {data.address}
-                    </p>
-                  )}
-                </div>
-              </section>
-            )}
-
+            
             {/* ===== Post Story card — structure/logic unchanged from original ===== */}
             <div className='overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm'>
               <div className="flex items-center justify-between gap-3 px-6 pt-6">

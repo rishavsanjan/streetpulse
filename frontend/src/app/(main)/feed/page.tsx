@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import MobileNavigationBar from '@/components/MobileNavigationBar';
 import Post from '@/components/Post';
 import RightSidebar from '@/components/RightSidebar';
+import Sidebar from '@/components/Sidebar';
 
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/axios';
@@ -46,7 +47,7 @@ const Page = () => {
     <div className="flex h-screen overflow-hidden bg-[#f4fbf4] text-[#161d19]">
 
       {/* SideNavBar (Desktop Only) */}
-
+      <Sidebar/>
 
       {/* Main Content Wrapper */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative">
